@@ -1,0 +1,13 @@
+.vscode
+.github
+dist
+node_modules
+coverage
+.env
+/logs
+llm_seo_generations.log
+test.log
+*.db
+*.rest
+.roo/
+AGENTS.md

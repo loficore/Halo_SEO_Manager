@@ -1,0 +1,302 @@
+    {
+      "post": {
+        "spec": {
+          "title": "【Trance风格采样包&spire预设】Anagram Sounds Nhato Sample Pack & Spire Essentials Vol. 2",
+          "slug": "trancefeng-ge-cai-yang-bao-spireyu-she-anagram-sounds-nhato-sample-pack-spire-essentials-vol.-2",
+          "releaseSnapshot": "0d849d78-2718-44b2-afee-124b1bf0952b",
+          "headSnapshot": "0d849d78-2718-44b2-afee-124b1bf0952b",
+          "baseSnapshot": "65283cbb-dc46-4fd9-a813-10e082f01c49",
+          "owner": "anotheradmin",
+          "template": "",
+          "cover": "https://halo-pic.oss-cn-hangzhou.aliyuncs.com/webp/NhatoSamplePackvol2.png",
+          "deleted": false,
+          "publish": true,
+          "publishTime": "2025-09-17T04:00:00Z",
+          "pinned": false,
+          "allowComment": true,
+          "visible": "PUBLIC",
+          "priority": 0,
+          "excerpt": {
+            "autoGenerate": true,
+            "raw": ""
+          },
+          "categories": [
+            "category-OmJhK",
+            "category-IybKq"
+          ],
+          "tags": [
+            "tag-ye5a3l7z",
+            "tag-MKBkm",
+            "tag-keCQy",
+            "tag-wNtma"
+          ],
+          "htmlMetas": []
+        },
+        "status": {
+          "phase": "PUBLISHED",
+          "conditions": [
+            {
+              "type": "PUBLISHED",
+              "status": "TRUE",
+              "lastTransitionTime": "2025-09-17T04:00:00.026046451Z",
+              "message": "Post published successfully.",
+              "reason": "Published"
+            },
+            {
+              "type": "DRAFT",
+              "status": "TRUE",
+              "lastTransitionTime": "2025-09-16T14:26:28.414594099Z",
+              "message": "Drafted post successfully.",
+              "reason": "DraftedSuccessfully"
+            }
+          ],
+          "permalink": "/archives/trancefeng-ge-cai-yang-bao-spireyu-she-anagram-sounds-nhato-sample-pack-spire-essentials-vol.-2",
+          "excerpt": "【Trance风格采样包&spire预设】Anagram Sounds Nhato Sample Pack & Spire Essentials Vol. 2 1.描述 这本采样包是来自日本顶尖Trance电子音乐制作人、DJ Nhato（纳豆） 与知名音色厂牌 Anagram Sounds 联名合",
+          "inProgress": false,
+          "contributors": [
+            "anotheradmin",
+            "lofibass2059"
+          ],
+          "hideFromList": false,
+          "lastModifyTime": "2025-09-17T04:09:36.936275825Z",
+          "observedVersion": 56
+        },
+        "apiVersion": "content.halo.run/v1alpha1",
+        "kind": "Post",
+        "metadata": {
+          "finalizers": [
+            "post-protection"
+          ],
+          "name": "e92b6dc7-7a58-4357-9a2f-ca01676a098f",
+          "labels": {
+            "content.halo.run/published": "true",
+            "content.halo.run/deleted": "false",
+            "content.halo.run/owner": "anotheradmin",
+            "content.halo.run/visible": "PUBLIC",
+            "content.halo.run/archive-year": "2025",
+            "content.halo.run/archive-month": "09",
+            "content.halo.run/archive-day": "17"
+          },
+          "annotations": {
+            "downloadUrlList": "https://pan.baidu.com/s/1wAgJ4iRh0dIwhOeUaouiCA?pwd=nt6p",
+            "isExcludeDetect": "false",
+            "randomImage": "true",
+            "original": "false",
+            "toc": "true",
+            "content.halo.run/preferred-editor": "bytemd",
+            "checksum/config": "b12c559073d721b1d70eae6561e32f12bae973b503ed53162c34a9d52847a767",
+            "content.halo.run/permalink-pattern": "/archives/{slug}",
+            "content.halo.run/last-associated-categories": "[\"category-OmJhK\",\"category-IybKq\"]",
+            "content.halo.run/last-associated-tags": "[\"tag-ye5a3l7z\",\"tag-MKBkm\",\"tag-keCQy\",\"tag-wNtma\"]",
+            "content.halo.run/stats": "{\"visit\":15,\"upvote\":0,\"totalComment\":0,\"approvedComment\":0}",
+            "content.halo.run/last-released-snapshot": "0d849d78-2718-44b2-afee-124b1bf0952b",
+            "checksum/content": "d4995d9e0954f82a6063840a693f525f52b5fa08743904adc0f31158b949f670"
+          },
+          "version": 56,
+          "creationTimestamp": "2025-09-16T14:26:28.378311658Z"
+        }
+      },
+      "categories": [
+        {
+          "spec": {
+            "displayName": "采样",
+            "slug": "cai-yang",
+            "description": "",
+            "cover": "",
+            "template": "",
+            "priority": 7,
+            "children": [],
+            "preventParentPostCascadeQuery": false,
+            "hideFromList": false
+          },
+          "status": {
+            "permalink": "/categories/cai-yang",
+            "postCount": 29,
+            "visiblePostCount": 29
+          },
+          "apiVersion": "content.halo.run/v1alpha1",
+          "kind": "Category",
+          "metadata": {
+            "generateName": "category-",
+            "finalizers": [
+              "category-protection"
+            ],
+            "name": "category-OmJhK",
+            "annotations": {
+              "content.halo.run/permalink-pattern": "categories",
+              "content.halo.run/last-hidden-state": "false"
+            },
+            "version": 18,
+            "creationTimestamp": "2025-03-16T15:13:40.473949654Z"
+          }
+        },
+        {
+          "spec": {
+            "displayName": "预设",
+            "slug": "yu-she",
+            "description": "",
+            "cover": "",
+            "template": "",
+            "priority": 9,
+            "children": [],
+            "preventParentPostCascadeQuery": false,
+            "hideFromList": false
+          },
+          "status": {
+            "permalink": "/categories/yu-she",
+            "postCount": 10,
+            "visiblePostCount": 10
+          },
+          "apiVersion": "content.halo.run/v1alpha1",
+          "kind": "Category",
+          "metadata": {
+            "generateName": "category-",
+            "finalizers": [
+              "category-protection"
+            ],
+            "name": "category-IybKq",
+            "annotations": {
+              "content.halo.run/permalink-pattern": "categories",
+              "content.halo.run/last-hidden-state": "false"
+            },
+            "version": 4,
+            "creationTimestamp": "2025-04-22T16:07:19.279225986Z"
+          }
+        }
+      ],
+      "tags": [
+        {
+          "spec": {
+            "displayName": "Trance",
+            "slug": "trance",
+            "color": "#ffffff",
+            "cover": ""
+          },
+          "status": {
+            "permalink": "/tags/trance",
+            "visiblePostCount": 3,
+            "postCount": 3,
+            "observedVersion": 5
+          },
+          "apiVersion": "content.halo.run/v1alpha1",
+          "kind": "Tag",
+          "metadata": {
+            "generateName": "tag-",
+            "finalizers": [
+              "tag-protection"
+            ],
+            "name": "tag-wNtma",
+            "annotations": {
+              "content.halo.run/permalink-pattern": "tags"
+            },
+            "version": 5,
+            "creationTimestamp": "2025-03-25T05:30:55.990916818Z"
+          }
+        },
+        {
+          "spec": {
+            "displayName": "EDM",
+            "slug": "edm",
+            "color": "#ffffff",
+            "cover": ""
+          },
+          "status": {
+            "permalink": "/tags/edm",
+            "visiblePostCount": 41,
+            "postCount": 41,
+            "observedVersion": 33
+          },
+          "apiVersion": "content.halo.run/v1alpha1",
+          "kind": "Tag",
+          "metadata": {
+            "generateName": "tag-",
+            "finalizers": [
+              "tag-protection"
+            ],
+            "name": "tag-keCQy",
+            "annotations": {
+              "content.halo.run/permalink-pattern": "tags"
+            },
+            "version": 33,
+            "creationTimestamp": "2025-03-25T05:30:59.797219432Z"
+          }
+        },
+        {
+          "spec": {
+            "displayName": "Loop",
+            "slug": "loop",
+            "color": "#ffffff",
+            "cover": ""
+          },
+          "status": {
+            "permalink": "/tags/loop",
+            "visiblePostCount": 15,
+            "postCount": 15,
+            "observedVersion": 18
+          },
+          "apiVersion": "content.halo.run/v1alpha1",
+          "kind": "Tag",
+          "metadata": {
+            "generateName": "tag-",
+            "finalizers": [
+              "tag-protection"
+            ],
+            "name": "tag-MKBkm",
+            "annotations": {
+              "content.halo.run/permalink-pattern": "tags"
+            },
+            "version": 18,
+            "creationTimestamp": "2025-03-31T04:52:15.924818041Z"
+          }
+        },
+        {
+          "spec": {
+            "displayName": "WAV",
+            "slug": "wav",
+            "color": "#ffffff",
+            "cover": ""
+          },
+          "status": {
+            "permalink": "/tags/wav",
+            "visiblePostCount": 2,
+            "postCount": 2,
+            "observedVersion": 9
+          },
+          "apiVersion": "content.halo.run/v1alpha1",
+          "kind": "Tag",
+          "metadata": {
+            "generateName": "tag-",
+            "finalizers": [
+              "tag-protection"
+            ],
+            "name": "tag-ye5a3l7z",
+            "annotations": {
+              "content.halo.run/permalink-pattern": "tags"
+            },
+            "version": 9,
+            "creationTimestamp": "2025-09-05T17:54:13.937308688Z"
+          }
+        }
+      ],
+      "contributors": [
+        {
+          "displayName": "SaLINAX纱临",
+          "name": "anotheradmin"
+        },
+        {
+          "displayName": "Lofibass",
+          "avatar": "https://halo-pic.oss-cn-hangzhou.aliyuncs.com/webp/6acd1e46-f3da-484f-b009-2d3753b0b77b.png",
+          "name": "lofibass2059"
+        }
+      ],
+      "owner": {
+        "displayName": "SaLINAX纱临",
+        "name": "anotheradmin"
+      },
+      "stats": {
+        "visit": 15,
+        "upvote": 0,
+        "totalComment": 0,
+        "approvedComment": 0
+      }
+    }

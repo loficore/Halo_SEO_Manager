@@ -47,6 +47,19 @@ export const Modules = {
     SeoPublisher: 'SeoPublisher',
     SeoValidator: 'SeoValidator',
     LlmSeoGenerations: 'llmSeoGenerations',
+    MelodyAuthClient: 'MelodyAuthClient',
+    AuthService: 'AuthService',
+    AuthController: 'AuthController',
+    ConfigService: 'ConfigService',
+    ConfigController: 'ConfigController',
+    ApiKeyService: 'ApiKeyService',
+    ApiKeyController: 'ApiKeyController',
+    TaskService: 'TaskService',
+    TaskController: 'TaskController',
+    OptimizationService: 'OptimizationService',
+    OptimizationController: 'OptimizationController',
+    LogService: 'LogService',
+    LogController: 'LogController',
 } as const;
 export type ModuleKey = typeof Modules[keyof typeof Modules];
 

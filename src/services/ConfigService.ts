@@ -28,8 +28,19 @@ export class ConfigService {
    * @returns {Promise<SystemSettings>} 包含所有系统设置的对象。
    */
   async getSystemSettings(): Promise<SystemSettings> {
-    const settingsMap = await this.databaseManager.getAllSettings();
-    log('debug', Modules.ConfigService, 'Retrieved raw settings from database.', { settingsMap });
+    // 使用新的 DAO 层获取所有设置
+    const settingsRows = await this.databaseManager.settings.getAllSettings();
+    // 将结果数组转换为键值对映射
+    const settingsMap = settingsRows.reduce((acc, row) => {
+      acc[row.key] = row.value;
+      return acc;
+    }, {} as Record<string, string>);
+    log(
+      'debug',
+      Modules.ConfigService,
+      'Retrieved raw settings from database.',
+      { settingsMap },
+    );
 
     const smtpConfig: SmtpConfig = {
       host: settingsMap['smtp_host'] || '',
@@ -43,13 +54,22 @@ export class ConfigService {
     const llmConfig: LlmConfig = {
       llmModel: settingsMap['llm_model'] || 'gpt-3.5-turbo',
       llmApiKey: settingsMap['llm_api_key'] || '',
-      llmApiBaseUrl: settingsMap['llm_api_base_url'] || 'https://api.openai.com/v1',
+      llmApiBaseUrl:
+        settingsMap['llm_api_base_url'] || 'https://api.openai.com/v1',
     };
 
     const optimizationParams: OptimizationParams = {
-      minContentLength: settingsMap['min_content_length'] ? parseInt(settingsMap['min_content_length']) : 500,
-      maxContentLength: settingsMap['max_content_length'] ? parseInt(settingsMap['max_content_length']) : 50000,
-      minDaysSinceLastOptimization: settingsMap['min_days_since_last_optimization'] ? parseInt(settingsMap['min_days_since_last_optimization']) : 7,
+      minContentLength: settingsMap['min_content_length']
+        ? parseInt(settingsMap['min_content_length'])
+        : 500,
+      maxContentLength: settingsMap['max_content_length']
+        ? parseInt(settingsMap['max_content_length'])
+        : 50000,
+      minDaysSinceLastOptimization: settingsMap[
+        'min_days_since_last_optimization'
+      ]
+        ? parseInt(settingsMap['min_days_since_last_optimization'])
+        : 7,
       forceReoptimize: settingsMap['force_reoptimize'] === 'true',
     };
 
@@ -60,7 +80,8 @@ export class ConfigService {
       optimizationParams,
       databasePath: settingsMap['database_path'] || 'seo_manager.db',
       logFilePath: settingsMap['log_file_path'] || 'logs/app.log',
-      allowNewUserRegistration: settingsMap['allow_new_user_registration'] === 'true',
+      allowNewUserRegistration:
+        settingsMap['allow_new_user_registration'] === 'true',
     };
   }
 
@@ -71,76 +92,202 @@ export class ConfigService {
   async initializeSystem(request: InitializeSystemRequest): Promise<void> {
     const currentSettings = await this.getSystemSettings();
     if (currentSettings.isSystemInitialized) {
-      log('warn', Modules.ConfigService, 'System already initialized. Skipping initialization.', { request });
+      log(
+        'warn',
+        Modules.ConfigService,
+        'System already initialized. Skipping initialization.',
+        { request },
+      );
       throw new Error('System already initialized.');
     }
 
-    // 设置核心配置，确保所有字段都被设置，即使是默认值
-    await this.databaseManager.setSetting('is_system_initialized', 'true');
-    await this.databaseManager.setSetting('database_path', request.databasePath || 'seo_manager.db');
-    await this.databaseManager.setSetting('log_file_path', request.logFilePath || 'logs/app.log');
-    await this.databaseManager.setSetting('allow_new_user_registration', (request.allowNewUserRegistration ?? true) ? 'true' : 'false'); // 默认为 true
+    // 使用新的 DAO 层设置核心配置，确保所有字段都被设置，即使是默认值
+    await this.databaseManager.settings.upsertSetting('is_system_initialized', 'true');
+    await this.databaseManager.settings.upsertSetting(
+      'database_path',
+      request.databasePath || 'seo_manager.db',
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'log_file_path',
+      request.logFilePath || 'logs/app.log',
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'allow_new_user_registration',
+      (request.allowNewUserRegistration ?? true) ? 'true' : 'false',
+    ); // 默认为 true
 
-    // 设置 SMTP 配置
-    await this.databaseManager.setSetting('smtp_host', request.smtpConfig?.host || '');
-    await this.databaseManager.setSetting('smtp_port', (request.smtpConfig?.port ?? 587).toString());
-    await this.databaseManager.setSetting('smtp_username', request.smtpConfig?.username || '');
-    await this.databaseManager.setSetting('smtp_password', request.smtpConfig?.password || '');
-    await this.databaseManager.setSetting('smtp_from_address', request.smtpConfig?.fromAddress || '');
-    await this.databaseManager.setSetting('smtp_secure', (request.smtpConfig?.secure ?? false) ? 'true' : 'false'); // 默认为 false
+    // 使用新的 DAO 层设置 SMTP 配置
+    await this.databaseManager.settings.upsertSetting(
+      'smtp_host',
+      request.smtpConfig?.host || '',
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'smtp_port',
+      (request.smtpConfig?.port ?? 587).toString(),
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'smtp_username',
+      request.smtpConfig?.username || '',
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'smtp_password',
+      request.smtpConfig?.password || '',
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'smtp_from_address',
+      request.smtpConfig?.fromAddress || '',
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'smtp_secure',
+      (request.smtpConfig?.secure ?? false) ? 'true' : 'false',
+    ); // 默认为 false
 
-    // 设置 LLM 配置
-    await this.databaseManager.setSetting('llm_model', request.llmConfig?.llmModel || 'gpt-3.5-turbo');
-    await this.databaseManager.setSetting('llm_api_key', request.llmConfig?.llmApiKey || '');
-    await this.databaseManager.setSetting('llm_api_base_url', request.llmConfig?.llmApiBaseUrl || 'https://api.openai.com/v1');
+    // 使用新的 DAO 层设置 LLM 配置
+    await this.databaseManager.settings.upsertSetting(
+      'llm_model',
+      request.llmConfig?.llmModel || 'gpt-3.5-turbo',
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'llm_api_key',
+      request.llmConfig?.llmApiKey || '',
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'llm_api_base_url',
+      request.llmConfig?.llmApiBaseUrl || 'https://api.openai.com/v1',
+    );
 
-    // 设置优化参数
-    await this.databaseManager.setSetting('min_content_length', (request.optimizationParams?.minContentLength ?? 500).toString());
-    await this.databaseManager.setSetting('max_content_length', (request.optimizationParams?.maxContentLength ?? 50000).toString());
-    await this.databaseManager.setSetting('min_days_since_last_optimization', (request.optimizationParams?.minDaysSinceLastOptimization ?? 7).toString());
-    await this.databaseManager.setSetting('force_reoptimize', (request.optimizationParams?.forceReoptimize ?? false) ? 'true' : 'false'); // 默认为 false
+    // 使用新的 DAO 层设置优化参数
+    await this.databaseManager.settings.upsertSetting(
+      'min_content_length',
+      (request.optimizationParams?.minContentLength ?? 500).toString(),
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'max_content_length',
+      (request.optimizationParams?.maxContentLength ?? 50000).toString(),
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'min_days_since_last_optimization',
+      (
+        request.optimizationParams?.minDaysSinceLastOptimization ?? 7
+      ).toString(),
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'force_reoptimize',
+      (request.optimizationParams?.forceReoptimize ?? false) ? 'true' : 'false',
+    ); // 默认为 false
 
-    log('info', Modules.ConfigService, 'System initialized successfully.', { request });
+    log('info', Modules.ConfigService, 'System initialized successfully.', {
+      request,
+    });
   }
 
   /**
    * @description 更新系统设置。
    * @param {UpdateSystemSettingsRequest} request - 更新请求数据。
    */
-  async updateSystemSettings(request: UpdateSystemSettingsRequest): Promise<void> {
+  async updateSystemSettings(
+    request: UpdateSystemSettingsRequest,
+  ): Promise<void> {
     // 获取当前设置以合并更新
     const currentSettings = await this.getSystemSettings();
 
-    // 更新核心配置
-    await this.databaseManager.setSetting('database_path', request.databasePath ?? currentSettings.databasePath);
-    await this.databaseManager.setSetting('log_file_path', request.logFilePath ?? currentSettings.logFilePath);
-    await this.databaseManager.setSetting('allow_new_user_registration', (request.allowNewUserRegistration ?? currentSettings.allowNewUserRegistration) ? 'true' : 'false');
+    // 使用新的 DAO 层更新核心配置
+    await this.databaseManager.settings.upsertSetting(
+      'database_path',
+      request.databasePath ?? currentSettings.databasePath,
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'log_file_path',
+      request.logFilePath ?? currentSettings.logFilePath,
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'allow_new_user_registration',
+      (request.allowNewUserRegistration ??
+        currentSettings.allowNewUserRegistration)
+        ? 'true'
+        : 'false',
+    );
 
-    // 更新 SMTP 配置
+    // 使用新的 DAO 层更新 SMTP 配置
     const currentSmtp = currentSettings.smtpConfig;
     const newSmtp = request.smtpConfig;
-    await this.databaseManager.setSetting('smtp_host', newSmtp?.host ?? currentSmtp.host);
-    await this.databaseManager.setSetting('smtp_port', (newSmtp?.port ?? currentSmtp.port).toString());
-    await this.databaseManager.setSetting('smtp_username', newSmtp?.username ?? currentSmtp.username);
-    await this.databaseManager.setSetting('smtp_password', newSmtp?.password ?? currentSmtp.password);
-    await this.databaseManager.setSetting('smtp_from_address', newSmtp?.fromAddress ?? currentSmtp.fromAddress);
-    await this.databaseManager.setSetting('smtp_secure', (newSmtp?.secure ?? currentSmtp.secure) ? 'true' : 'false');
+    await this.databaseManager.settings.upsertSetting(
+      'smtp_host',
+      newSmtp?.host ?? currentSmtp.host,
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'smtp_port',
+      (newSmtp?.port ?? currentSmtp.port).toString(),
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'smtp_username',
+      newSmtp?.username ?? currentSmtp.username,
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'smtp_password',
+      newSmtp?.password ?? currentSmtp.password,
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'smtp_from_address',
+      newSmtp?.fromAddress ?? currentSmtp.fromAddress,
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'smtp_secure',
+      (newSmtp?.secure ?? currentSmtp.secure) ? 'true' : 'false',
+    );
 
-    // 更新 LLM 配置
+    // 使用新的 DAO 层更新 LLM 配置
     const currentLlm = currentSettings.llmConfig;
     const newLlm = request.llmConfig;
-    await this.databaseManager.setSetting('llm_model', newLlm?.llmModel ?? currentLlm.llmModel);
-    await this.databaseManager.setSetting('llm_api_key', newLlm?.llmApiKey ?? currentLlm.llmApiKey);
-    await this.databaseManager.setSetting('llm_api_base_url', newLlm?.llmApiBaseUrl ?? currentLlm.llmApiBaseUrl ?? '');
+    await this.databaseManager.settings.upsertSetting(
+      'llm_model',
+      newLlm?.llmModel ?? currentLlm.llmModel,
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'llm_api_key',
+      newLlm?.llmApiKey ?? currentLlm.llmApiKey,
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'llm_api_base_url',
+      newLlm?.llmApiBaseUrl ?? currentLlm.llmApiBaseUrl ?? '',
+    );
 
-    // 更新优化参数
+    // 使用新的 DAO 层更新优化参数
     const currentOptimization = currentSettings.optimizationParams;
     const newOptimization = request.optimizationParams;
-    await this.databaseManager.setSetting('min_content_length', (newOptimization?.minContentLength ?? currentOptimization.minContentLength).toString());
-    await this.databaseManager.setSetting('max_content_length', (newOptimization?.maxContentLength ?? currentOptimization.maxContentLength).toString());
-    await this.databaseManager.setSetting('min_days_since_last_optimization', (newOptimization?.minDaysSinceLastOptimization ?? currentOptimization.minDaysSinceLastOptimization).toString());
-    await this.databaseManager.setSetting('force_reoptimize', (newOptimization?.forceReoptimize ?? currentOptimization.forceReoptimize) ? 'true' : 'false');
+    await this.databaseManager.settings.upsertSetting(
+      'min_content_length',
+      (
+        newOptimization?.minContentLength ??
+        currentOptimization.minContentLength
+      ).toString(),
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'max_content_length',
+      (
+        newOptimization?.maxContentLength ??
+        currentOptimization.maxContentLength
+      ).toString(),
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'min_days_since_last_optimization',
+      (
+        newOptimization?.minDaysSinceLastOptimization ??
+        currentOptimization.minDaysSinceLastOptimization
+      ).toString(),
+    );
+    await this.databaseManager.settings.upsertSetting(
+      'force_reoptimize',
+      (newOptimization?.forceReoptimize ?? currentOptimization.forceReoptimize)
+        ? 'true'
+        : 'false',
+    );
 
-    log('info', Modules.ConfigService, 'System settings updated successfully.', { request });
+    log(
+      'info',
+      Modules.ConfigService,
+      'System settings updated successfully.',
+      { request },
+    );
   }
 }

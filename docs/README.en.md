@@ -6,20 +6,20 @@
 
 ## Features
 
-*   **Automated SEO Optimization**: Automatically generates SEO metadata for your articles.
-*   **Halo CMS Integration**: Seamlessly integrates with the Halo CMS.
-*   **LLM-Powered**: Uses a Large Language Model to generate high-quality SEO metadata.
-*   **SEO Best Practices**: Validates the generated metadata against SEO best practices.
-*   **Scheduled Tasks**: Runs on a schedule to keep your articles optimized.
+- **Automated SEO Optimization**: Automatically generates SEO metadata for your articles.
+- **Halo CMS Integration**: Seamlessly integrates with the Halo CMS.
+- **LLM-Powered**: Uses a Large Language Model to generate high-quality SEO metadata.
+- **SEO Best Practices**: Validates the generated metadata against SEO best practices.
+- **Scheduled Tasks**: Runs on a schedule to keep your articles optimized.
 
 ## Getting Started
 
 ### Prerequisites
 
-*   Node.js
-*   npm
-*   Halo CMS instance
-*   OpenAI API key
+- Node.js
+- npm
+- Halo CMS instance
+- OpenAI API key
 
 ### Installation
 

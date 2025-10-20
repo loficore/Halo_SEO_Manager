@@ -86,168 +86,239 @@ graph TD
 ### 3.1 API 层 (API Layer)
 
 **职责**:
-*   接收并处理所有外部HTTP请求。
-*   将HTTP请求映射到对应的服务层方法。
-*   对请求参数进行初步的格式校验。
-*   处理认证和授权（通过调用 `AuthService`）。
-*   统一的错误处理和响应格式（如JSON）。
-*   不包含核心业务逻辑，仅作为服务层的门面。
+
+- 接收并处理所有外部HTTP请求。
+- 将HTTP请求映射到对应的服务层方法。
+- 对请求参数进行初步的格式校验。
+- 处理认证和授权（通过调用 `AuthService`）。
+- 统一的错误处理和响应格式（如JSON）。
+- 不包含核心业务逻辑，仅作为服务层的门面。
 
 **主要组件**:
-*   **Controller/Router**: 定义API路由和处理函数。
-*   **Middleware**: 用于认证、授权、日志、错误处理等。
+
+- **Controller/Router**: 定义API路由和处理函数。
+- **Middleware**: 用于认证、授权、日志、错误处理等。
 
 **API 列表**:
 
-*   **认证与用户管理**:
-    *   `POST /api/auth/login`: 用户登录
-    *   `POST /api/auth/register`: 用户注册
-    *   `POST /api/auth/verify-mfa`: MFA验证
-    *   `GET /api/auth/profile`: 获取当前用户个人资料
-    *   `POST /api/auth/logout`: 用户登出
-    *   `POST /api/auth/refresh-token`: 刷新访问令牌
+- **认证与用户管理**:
+  - `POST /api/auth/login`: 用户登录
+  - `POST /api/auth/register`: 用户注册 (根据系统配置调整逻辑)
+  - `POST /api/auth/verify-mfa`: MFA验证
+  - `GET /api/auth/profile`: 获取当前用户个人资料
+  - `POST /api/auth/logout`: 用户登出
+  - `POST /api/auth/refresh-token`: 刷新访问令牌
 
-*   **文章管理**:
-    *   `GET /api/articles`: 获取文章列表 (支持分页、筛选、搜索)
-    *   `GET /api/articles/:articleId`: 获取单篇文章详情
+- **文章管理**:
+  - `GET /api/articles`: 获取文章列表 (支持分页、筛选、搜索)
+  - `GET /api/articles/:articleId`: 获取单篇文章详情
 
-*   **SEO 优化**:
-    *   `PATCH /api/articles/:articleId/seo`: 更新文章SEO元数据
-    *   `POST /api/articles/:articleId/seo/optimize-now`: 立即启动单篇文章SEO优化
+- **SEO 优化**:
+  - `PATCH /api/articles/:articleId/seo`: 更新文章SEO元数据
+  - `POST /api/articles/:articleId/seo/optimize-now`: 立即启动单篇文章SEO优化
 
-*   **配置管理**:
-    *   `GET /api/configs`: 获取当前用户配置
-    *   `PUT /api/configs`: 更新当前用户配置
+- **系统配置管理**:
+  - `POST /api/config/initialize`: 系统初始化
+  - `GET /api/config/settings`: 获取系统配置
+  - `PUT /api/config/settings`: 更新系统配置
 
-*   **任务调度**:
-    *   `POST /api/tasks/schedule`: 调度SEO优化任务
-    *   `GET /api/tasks/:taskId/status`: 获取指定任务状态
-    *   `POST /api/tasks/:taskId/cancel`: 取消指定任务
-    *   `GET /api/tasks`: 获取所有任务列表
+- **API Key 管理**:
+  - `GET /api/api-keys`: 获取 API Key 列表
+  - `POST /api/api-keys`: 创建新的 API Key
+  - `DELETE /api/api-keys/:id`: 删除指定 API Key
+
+- **任务调度管理**:
+  - `GET /api/tasks`: 获取所有优化任务列表
+  - `POST /api/tasks`: 创建新的优化任务
+  - `PUT /api/tasks/:id`: 更新指定优化任务
+  - `DELETE /api/tasks/:id`: 删除指定优化任务
+
+- **优化状态监控**:
+  - `GET /api/optimizations`: 获取所有优化运行状态列表
+  - `GET /api/optimizations/:id`: 获取指定优化运行详情
+
+- **日志查看**:
+  - `GET /api/logs`: 获取系统日志内容
 
 ### 3.2 服务层 (Service Layer)
 
 **职责**:
-*   包含核心业务逻辑和业务规则。
-*   编排和协调基础设施层的操作，完成复杂的业务流程。
-*   执行更深层次的业务数据校验。
-*   处理事务。
-*   保持与基础设施层的松耦合。
+
+- 包含核心业务逻辑和业务规则。
+- 编排和协调基础设施层的操作，完成复杂的业务流程。
+- 执行更深层次的业务数据校验。
+- 处理事务。
+- 保持与基础设施层的松耦合。
 
 **主要组件**:
-*   **AuthService**: 处理用户认证、注册、MFA、会话管理。
-*   **ArticleService**: 管理文章数据的业务逻辑。
-*   **SeoService**: 负责SEO元数据的优化、校验和发布流程。
-*   **TaskService**: 管理SEO优化任务的生命周期（调度、执行、取消、状态）。
-*   **ConfigService**: 管理应用程序的各种配置参数。
+
+- **AuthService**: 处理用户认证、注册、MFA、会话管理。
+- **ArticleService**: 管理文章数据的业务逻辑。
+- **SeoService**: 负责SEO元数据的优化、校验和发布流程。
+- **TaskService**: 管理SEO优化任务的生命周期（创建、读取、更新、删除、调度、执行、取消、状态）。
+- **ConfigService**: 管理应用程序的各种配置参数，包括系统初始化、SMTP、LLM、优化参数、数据库路径和日志文件路径等。
+- **ApiKeyService**: 处理 API Key 的生成、哈希存储、列表、删除和更新逻辑。
+- **OptimizationService**: 处理优化任务的执行、状态更新和报告存储。
+- **LogService**: 提供读取日志文件内容的逻辑。
 
 **接口示例**:
 
 1.  **AuthService**:
-    *   `login(loginData: LoginRequestDTO): Promise<AuthResultDTO>`
-    *   `register(registerData: RegisterRequestDTO): Promise<AuthResultDTO>`
-    *   `verifyMfa(userId: string, token: string): Promise<boolean>`
-    *   `getUserProfile(userId: string): Promise<UserProfileDTO | null>`
-    *   `logout(userId: string): Promise<boolean>`
-    *   `refreshAccessToken(refreshToken: string): Promise<string | null>`
-    *   `checkPermission(userId: string, permission: string): Promise<boolean>`
+    - `login(loginData: LoginRequestDTO): Promise<AuthResultDTO>`
+    - `register(registerData: RegisterRequestDTO, isSystemInitialized: boolean, isSmtpConfigured: boolean): Promise<AuthResultDTO>`
+    - `verifyMfa(userId: string, token: string): Promise<boolean>`
+    - `getUserProfile(userId: string): Promise<UserProfileDTO | null>`
+    - `logout(userId: string): Promise<boolean>`
+    - `refreshAccessToken(refreshToken: string): Promise<string | null>`
+    - `checkPermission(userId: string, permission: string): Promise<boolean>`
 
 2.  **ArticleService**:
-    *   `getArticles(pagination: PaginationDTO, filters: ArticleFilterDTO): Promise<PaginatedResultDTO<ArticleDTO>>`
-    *   `getArticleById(articleId: string): Promise<ArticleDetailDTO | null>`
-    *   `saveArticle(article: ArticleData): Promise<boolean>` (ArticleData 为基础设施层对象)
-    *   `updateArticleContentHash(articleId: string, newHash: string): Promise<boolean>`
+    - `getArticles(pagination: PaginationDTO, filters: ArticleFilterDTO): Promise<PaginatedResultDTO<ArticleDTO>>`
+    - `getArticleById(articleId: string): Promise<ArticleDetailDTO | null>`
+    - `saveArticle(article: ArticleData): Promise<boolean>` (ArticleData 为基础设施层对象)
+    - `updateArticleContentHash(articleId: string, newHash: string): Promise<boolean>`
 
 3.  **SeoService**:
-    *   `optimizeArticleSeo(articleId: string, previousSeoMeta: SeoMetaDTO | null, validationFeedback: ValidationFeedbackDTO | null): Promise<OptimizedSeoMetaDTO>`
-    *   `validateSeoMeta(seoMeta: SeoMetaDTO): Promise<ValidationResultDTO>`
-    *   `publishSeoMeta(articleId: string, seoMeta: OptimizedSeoMetaDTO): Promise<PublishResultDTO>`
+    - `optimizeArticleSeo(articleId: string, previousSeoMeta: SeoMetaDTO | null, validationFeedback: ValidationFeedbackDTO | null): Promise<OptimizedSeoMetaDTO>`
+    - `validateSeoMeta(seoMeta: SeoMetaDTO): Promise<ValidationResultDTO>`
+    - `publishSeoMeta(articleId: string, seoMeta: OptimizedSeoMetaDTO): Promise<PublishResultDTO>`
 
 4.  **TaskService**:
-    *   `scheduleOptimizationTask(taskConfig: TaskConfigDTO): Promise<TaskStatusDTO>`
-    *   `cancelTask(taskId: string): Promise<boolean>`
-    *   `getTaskStatus(taskId: string): Promise<TaskStatusDTO | null>`
-    *   `startImmediateOptimization(articleId: string, userId: string): Promise<TaskStatusDTO>`
+    - `createTask(taskData: CreateTaskDTO): Promise<TaskDTO>`
+    - `getTaskById(taskId: string): Promise<TaskDTO | null>`
+    - `getTasks(pagination: PaginationDTO, filters: TaskFilterDTO): Promise<PaginatedResultDTO<TaskDTO>>`
+    - `updateTask(taskId: string, updateData: UpdateTaskDTO): Promise<boolean>`
+    - `deleteTask(taskId: string): Promise<boolean>`
+    - `scheduleOptimizationTask(taskConfig: TaskConfigDTO): Promise<TaskStatusDTO>`
+    - `cancelTask(taskId: string): Promise<boolean>`
+    - `getTaskStatus(taskId: string): Promise<TaskStatusDTO | null>`
+    - `startImmediateOptimization(articleId: string, userId: string): Promise<TaskStatusDTO>`
 
 5.  **ConfigService**:
-    *   `getAppConfig(userId: string): Promise<AppConfigDTO | null>`
-    *   `updateAppConfig(userId: string, config: UpdateConfigRequestDTO): Promise<boolean>`
-    *   `getHaloApiToken(userId: string): Promise<string | null>`
-    *   `getOpenAIApiKey(userId: string): Promise<string | null>`
+    - `initializeSystem(initialConfig: InitialConfigDTO): Promise<boolean>`
+    - `getSystemSettings(): Promise<SystemSettingsDTO | null>`
+    - `updateSystemSettings(settings: UpdateSystemSettingsDTO): Promise<boolean>`
+    - `getSmtpConfig(): Promise<SmtpConfigDTO | null>`
+    - `updateSmtpConfig(config: SmtpConfigDTO): Promise<boolean>`
+    - `getLlmConfig(): Promise<LlmConfigDTO | null>`
+    - `updateLlmConfig(config: LlmConfigDTO): Promise<boolean>`
+    - `getOptimizationParams(): Promise<OptimizationParamsDTO | null>`
+    - `updateOptimizationParams(params: OptimizationParamsDTO): Promise<boolean>`
+    - `getDatabasePath(): Promise<string>`
+    - `getLogFilePath(): Promise<string>`
+
+6.  **ApiKeyService**:
+    - `createApiKey(userId: string, name: string): Promise<ApiKeyDTO>`
+    - `getApiKeys(userId: string): Promise<ApiKeyDTO[]>`
+    - `deleteApiKey(userId: string, apiKeyId: string): Promise<boolean>`
+    - `validateApiKey(key: string): Promise<UserDTO | null>`
+
+7.  **OptimizationService**:
+    - `executeOptimization(taskId: string): Promise<OptimizationRunDTO>`
+    - `getOptimizationRuns(pagination: PaginationDTO, filters: OptimizationFilterDTO): Promise<PaginatedResultDTO<OptimizationRunDTO>>`
+    - `getOptimizationRunById(runId: string): Promise<OptimizationRunDTO | null>`
+    - `updateOptimizationStatus(runId: string, status: OptimizationStatus, report: OptimizationReportDTO): Promise<boolean>`
+
+8.  **LogService**:
+    - `getLogs(level?: LogLevel, module?: ModuleKey, startDate?: Date, endDate?: Date, limit?: number): Promise<LogEntryDTO[]>`
 
 ### 3.3 基础设施层 (Infrastructure Layer)
 
 **职责**:
-*   封装与外部系统（Halo CMS、MelodyAuth）和底层资源（数据库、文件系统）的交互细节。
-*   提供原子性的操作接口，供服务层调用。
-*   处理数据转换（如从数据库模型到业务领域模型）。
+
+- 封装与外部系统（Halo CMS、MelodyAuth）和底层资源（数据库、文件系统）的交互细节。
+- 提供原子性的操作接口，供服务层调用。
+- 处理数据转换（如从数据库模型到业务领域模型）。
 
 **主要组件**:
 
 1.  **HaloClient**:
-    *   **职责**: 与Halo CMS API交互，获取文章数据并使用JSON Patch更新SEO元数据。
-    *   **接口**: `getPost(postName: string): Promise<RawHaloPostData | null>`, `getAllPosts(maxPages: number): Promise<RawHaloPostData[]>`, `updatePostSeoMeta(postName: string, jsonPatchOperations: Operation[]): Promise<{ success: boolean; error?: string }>`.
+    - **职责**: 与Halo CMS API交互，获取文章数据并使用JSON Patch更新SEO元数据。
+    - **接口**: `getPost(postName: string): Promise<RawHaloPostData | null>`, `getAllPosts(maxPages: number): Promise<RawHaloPostData[]>`, `updatePostSeoMeta(postName: string, jsonPatchOperations: Operation[]): Promise<{ success: boolean; error?: string }>`.
 
 2.  **DatabaseManager**:
-    *   **职责**: 管理SQLite数据库连接、CRUD操作、数据备份。
-    *   **接口**: `initDb(): Promise<void>`, `saveArticleData(article: ArticleData): Promise<void>`, `getArticleData(articleId: string): Promise<ArticleData | null>`, `updateArticleOptimizationStatus(articleId: string, status: 'pending' | 'optimized' | 'failed', timestamp: Date): Promise<void>`, `saveConfig(userId: string, key: string, value: string): Promise<void>`, `getConfig(userId: string, key: string): Promise<string | null>`, `backupDatabase(destinationPath: string): Promise<void>`.
+    - **职责**: 管理SQLite数据库连接、CRUD操作、数据备份。
+    - **接口**: `initDb(): Promise<void>`, `saveArticleData(article: ArticleData): Promise<void>`, `getArticleData(articleId: string): Promise<ArticleData | null>`, `updateArticleOptimizationStatus(articleId: string, status: 'pending' | 'optimized' | 'failed', timestamp: Date): Promise<void>`, `saveConfig(userId: string, key: string, value: string): Promise<void>`, `getConfig(userId: string, key: string): Promise<string | null>`, `backupDatabase(destinationPath: string): Promise<void>`.
 
 3.  **MelodyAuthClient**:
-    *   **职责**: 与外部MelodyAuth服务进行通信，处理实际的认证和授权请求。
-    *   **接口**: `authenticate(credentials: any): Promise<any>`, `registerUser(userData: any): Promise<any>`, `verifyMfaToken(userId: string, token: string): Promise<boolean>`, `authorize(userId: string, resource: string, action: string): Promise<boolean>`.
+    - **职责**: 与外部MelodyAuth服务进行通信，处理实际的认证和授权请求。
+    - **接口**: `authenticate(credentials: any): Promise<any>`, `registerUser(userData: any): Promise<any>`, `verifyMfaToken(userId: string, token: string): Promise<boolean>`, `authorize(userId: string, resource: string, action: string): Promise<boolean>`.
 
 4.  **Logger**:
-    *   **职责**: 提供统一的日志记录功能。
-    *   **接口**: `log(level: LogLevel, module: string, message: string, context?: any): void`.
+    - **职责**: 提供统一的日志记录功能。
+    - **接口**: `log(level: LogLevel, module: string, message: string, context?: any): void`.
 
 5.  **SeoOptimizer (旧SeoOptimizer)**:
-    *   **职责**: 封装与LLM的交互逻辑，生成SEO元数据。
-    *   **接口**: `optimizeArticle(title: string, content: string, currentSeoMeta: SeoMeta | null, previousOutput: string | null, validationFeedback: ValidationFeedback | null): Promise<SeoMeta | null>`.
+    - **职责**: 封装与LLM的交互逻辑，生成SEO元数据。
+    - **接口**: `optimizeArticle(title: string, content: string, currentSeoMeta: SeoMeta | null, previousOutput: string | null, validationFeedback: ValidationFeedback | null): Promise<SeoMeta | null>`.
 
 6.  **SeoValidator (旧SeoValidator)**:
-    *   **职责**: 封装SEO元数据验证规则。
-    *   **接口**: `validate(seoMeta: SeoMeta): ValidationResult`.
+    - **职责**: 封装SEO元数据验证规则。
+    - **接口**: `validate(seoMeta: SeoMeta): ValidationResult`.
 
 ## 4. DTO (数据传输对象) 规划
 
 为了确保各层之间的数据传输格式一致且清晰，我们将广泛使用DTO。DTO将定义数据结构，用于API请求/响应、服务层方法参数和返回值。
 
 **DTO的优势**:
-*   **解耦**: 隔离领域模型与外部接口，防止领域模型细节泄露。
-*   **数据校验**: 可以在API层对DTO进行初步校验，减少服务层负担。
-*   **清晰性**: 明确数据预期格式，提升可读性和可维护性。
-*   **安全性**: 可以筛选出需要暴露给客户端的数据。
+
+- **解耦**: 隔离领域模型与外部接口，防止领域模型细节泄露。
+- **数据校验**: 可以在API层对DTO进行初步校验，减少服务层负担。
+- **清晰性**: 明确数据预期格式，提升可读性和可维护性。
+- **安全性**: 可以筛选出需要暴露给客户端的数据。
 
 **DTO 类型示例**:
 
 1.  **认证相关**:
-    *   `LoginRequestDTO`: { username: string, password: string }
-    *   `RegisterRequestDTO`: { username: string, password: string, email: string }
-    *   `AuthResponseDTO`: { accessToken: string, refreshToken: string, userProfile: UserProfileDTO }
-    *   `UserProfileDTO`: { userId: string, username: string, email: string, roles: string[] }
+    - `LoginRequestDTO`: { username: string, password: string }
+    - `RegisterRequestDTO`: { username: string, password: string, email: string }
+    - `AuthResponseDTO`: { accessToken: string, refreshToken: string, userProfile: UserProfileDTO }
+    - `UserProfileDTO`: { userId: string, username: string, email: string, roles: string[] }
 
 2.  **文章相关**:
-    *   `GetArticlesRequestDTO`: { page?: number, size?: number, sortBy?: string, order?: 'asc' | 'desc', search?: string }
-    *   `ArticleDTO`: { id: string, title: string, slug: string, excerpt: string, url: string, lastOptimized?: Date }
-    *   `ArticleDetailDTO`: { id: string, title: string, content: string, slug: string, excerpt: string, tags: string[], categories: string[], url: string, currentSeoMeta: SeoMetaDTO | null }
-    *   `PaginatedResponseDTO<T>`: { items: T[], total: number, page: number, size: number }
+    - `GetArticlesRequestDTO`: { page?: number, size?: number, sortBy?: string, order?: 'asc' | 'desc', search?: string }
+    - `ArticleDTO`: { id: string, title: string, slug: string, excerpt: string, url: string, lastOptimized?: Date }
+    - `ArticleDetailDTO`: { id: string, title: string, content: string, slug: string, excerpt: string, tags: string[], categories: string[], url: string, currentSeoMeta: SeoMetaDTO | null }
+    - `PaginatedResponseDTO<T>`: { items: T[], total: number, page: number, size: number }
 
 3.  **SEO元数据相关**:
-    *   `SeoMetaDTO`: { metaTitle: string, metaDescription: string, keywords: string[], slug: string }
-    *   `UpdateSeoMetaRequestDTO`: { metaTitle?: string, metaDescription?: string, keywords?: string[], slug?: string }
-    *   `OptimizedSeoMetaDTO`: { metaTitle: string, metaDescription: string, keywords: string[], slug: string, llmOutput?: string }
-    *   `SeoUpdateResponseDTO`: { success: boolean, message: string, errors?: string[] }
-    *   `ValidationFeedbackDTO`: { metaTitleFeedback?: string, metaDescriptionFeedback?: string, keywordsFeedback?: string[], slugFeedback?: string }
-    *   `ValidationResultDTO`: { isValid: boolean, errors?: string[] }
-    *   `PublishResultDTO`: { success: boolean, message: string }
+    - `SeoMetaDTO`: { metaTitle: string, metaDescription: string, keywords: string[], slug: string }
+    - `UpdateSeoMetaRequestDTO`: { metaTitle?: string, metaDescription?: string, keywords?: string[], slug?: string }
+    - `OptimizedSeoMetaDTO`: { metaTitle: string, metaDescription: string, keywords: string[], slug: string, llmOutput?: string }
+    - `SeoUpdateResponseDTO`: { success: boolean, message: string, errors?: string[] }
+    - `ValidationFeedbackDTO`: { metaTitleFeedback?: string, metaDescriptionFeedback?: string, keywordsFeedback?: string[], slugFeedback?: string }
+    - `ValidationResultDTO`: { isValid: boolean, errors?: string[] }
+    - `PublishResultDTO`: { success: boolean, message: string }
 
 4.  **配置相关**:
-    *   `ConfigDTO`: { haloApiToken: string, openAIApiKey: string, minContentLength: number, maxContentLength: number, ... }
-    *   `UpdateConfigRequestDTO`: 同 `ConfigDTO`，但字段可选。
+    - `InitialConfigDTO`: { adminUsername: string, adminPassword: string, adminEmail: string, smtpConfig?: SmtpConfigDTO, llmConfig?: LlmConfigDTO, optimizationParams?: OptimizationParamsDTO }
+    - `SystemSettingsDTO`: { smtpConfig: SmtpConfigDTO, llmConfig: LlmConfigDTO, optimizationParams: OptimizationParamsDTO, databasePath: string, logFilePath: string, isInitialized: boolean }
+    - `UpdateSystemSettingsDTO`: 同 `SystemSettingsDTO`，但字段可选。
+    - `SmtpConfigDTO`: { host: string, port: number, secure: boolean, user: string, pass: string, from: string }
+    - `LlmConfigDTO`: { provider: 'openai' | 'custom', apiKey: string, model: string, baseUrl?: string }
+    - `OptimizationParamsDTO`: { minContentLength: number, maxContentLength: number, minDaysSinceLastOptimization: number, forceReoptimize: boolean }
 
-5.  **任务调度相关**:
-    *   `ScheduleTaskRequestDTO`: { articleIds?: string[], frequency: 'daily' | 'weekly' | 'monthly' | 'once', startTime: string, userId: string }
-    *   `TaskStatusDTO`: { taskId: string, status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'cancelled', progress: number, message: string, startTime: string, endTime?: string }
-    *   `TaskConfigDTO`: { articles: { id: string, title: string }[], schedule: string, userId: string, ... }
+5.  **API Key 相关**:
+    - `CreateApiKeyDTO`: { name: string }
+    - `ApiKeyDTO`: { id: string, name: string, keyPrefix: string, createdAt: Date, expiresAt?: Date, lastUsedAt?: Date }
+
+6.  **任务调度相关**:
+    - `CreateTaskDTO`: { name: string, description?: string, schedule: string, articleIds?: string[], userId: string }
+    - `UpdateTaskDTO`: 同 `CreateTaskDTO`，但字段可选。
+    - `TaskDTO`: { id: string, name: string, description?: string, schedule: string, status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled', createdAt: Date, lastRunAt?: Date, nextRunAt?: Date, userId: string }
+    - `TaskFilterDTO`: { status?: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled', search?: string }
+    - `ScheduleTaskRequestDTO`: { articleIds?: string[], frequency: 'daily' | 'weekly' | 'monthly' | 'once', startTime: string, userId: string }
+    - `TaskStatusDTO`: { taskId: string, status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'cancelled', progress: number, message: string, startTime: string, endTime?: string }
+    - `TaskConfigDTO`: { articles: { id: string, title: string }[], schedule: string, userId: string, ... }
+
+7.  **优化运行相关**:
+    - `OptimizationRunDTO`: { id: string, taskId: string, articleId: string, status: 'pending' | 'optimizing' | 'validated' | 'published' | 'failed', startTime: Date, endTime?: Date, report?: OptimizationReportDTO }
+    - `OptimizationReportDTO`: { llmOutput: string, metaTitle: string, metaDescription: string, keywords: string[], slug: string, validationFeedback?: ValidationFeedbackDTO, publishResult?: PublishResultDTO }
+    - `OptimizationFilterDTO`: { status?: 'pending' | 'optimizing' | 'validated' | 'published' | 'failed', taskId?: string, articleId?: string }
+
+8.  **日志相关**:
+    - `LogEntryDTO`: { timestamp: Date, level: 'info' | 'warn' | 'error' | 'debug', module: ModuleKey, message: string, context?: any }
+    - `LogLevel`: 'info' | 'warn' | 'error' | 'debug' (Enum)
+    - `ModuleKey`: (Enum, already exists, just reference it)
 
 这些DTO将在项目的`src/types`目录下定义，确保类型安全和代码可读性。

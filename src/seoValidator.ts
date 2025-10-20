@@ -25,38 +25,78 @@ export class SeoValidator {
     // metaTitle validation
     if (!seoMeta.metaTitle || seoMeta.metaTitle.length === 0) {
       isValid = false;
-      errors.push({ field: 'metaTitle', code: 'empty', message: 'metaTitle cannot be empty.', currentValue: seoMeta.metaTitle });
+      errors.push({
+        field: 'metaTitle',
+        code: 'empty',
+        message: 'metaTitle cannot be empty.',
+        currentValue: seoMeta.metaTitle,
+      });
     }
     if (seoMeta.metaTitle && seoMeta.metaTitle.length > 60) {
       isValid = false;
-      errors.push({ field: 'metaTitle', code: 'too_long', message: 'metaTitle must be <= 60 characters.', currentLength: seoMeta.metaTitle.length, requirement: '<= 60' });
+      errors.push({
+        field: 'metaTitle',
+        code: 'too_long',
+        message: 'metaTitle must be <= 60 characters.',
+        currentLength: seoMeta.metaTitle.length,
+        requirement: '<= 60',
+      });
     }
 
     // 2. metaDescription 校验
     // metaDescription validation
     if (!seoMeta.metaDescription || seoMeta.metaDescription.length === 0) {
       isValid = false;
-      errors.push({ field: 'metaDescription', code: 'empty', message: 'metaDescription cannot be empty.', currentValue: seoMeta.metaDescription });
+      errors.push({
+        field: 'metaDescription',
+        code: 'empty',
+        message: 'metaDescription cannot be empty.',
+        currentValue: seoMeta.metaDescription,
+      });
     }
-    if (seoMeta.metaDescription && (seoMeta.metaDescription.length < 80 || seoMeta.metaDescription.length > 160)) {
+    if (
+      seoMeta.metaDescription &&
+      (seoMeta.metaDescription.length < 80 ||
+        seoMeta.metaDescription.length > 160)
+    ) {
       isValid = false;
-      errors.push({ field: 'metaDescription', code: 'length_range', message: 'metaDescription length must be 80–160 characters.', currentLength: seoMeta.metaDescription.length, requirement: '80–160' });
+      errors.push({
+        field: 'metaDescription',
+        code: 'length_range',
+        message: 'metaDescription length must be 80–160 characters.',
+        currentLength: seoMeta.metaDescription.length,
+        requirement: '80–160',
+      });
     }
 
     // 3. keywords 校验
     // keywords validation
     if (!seoMeta.keywords || seoMeta.keywords.length === 0) {
       isValid = false;
-      errors.push({ field: 'keywords', code: 'empty', message: 'keywords cannot be empty.' });
+      errors.push({
+        field: 'keywords',
+        code: 'empty',
+        message: 'keywords cannot be empty.',
+      });
     } else {
       if (seoMeta.keywords.length < 2 || seoMeta.keywords.length > 5) {
         isValid = false;
-        errors.push({ field: 'keywords', code: 'count_range', message: 'keywords array length must be between 2 and 5.', currentLength: seoMeta.keywords.length, requirement: '2–5' });
+        errors.push({
+          field: 'keywords',
+          code: 'count_range',
+          message: 'keywords array length must be between 2 and 5.',
+          currentLength: seoMeta.keywords.length,
+          requirement: '2–5',
+        });
       }
       for (const keyword of seoMeta.keywords) {
         if (!keyword || keyword.length === 0) {
           isValid = false;
-          errors.push({ field: 'keywords', code: 'item_empty', message: 'Individual keyword cannot be empty.' });
+          errors.push({
+            field: 'keywords',
+            code: 'item_empty',
+            message: 'Individual keyword cannot be empty.',
+          });
           break;
         }
       }
@@ -66,28 +106,49 @@ export class SeoValidator {
     // slug validation
     if (!seoMeta.slug || seoMeta.slug.length === 0) {
       isValid = false;
-      errors.push({ field: 'slug', code: 'empty', message: 'slug cannot be empty.' });
+      errors.push({
+        field: 'slug',
+        code: 'empty',
+        message: 'slug cannot be empty.',
+      });
     }
     // 正则表达式校验简短英文或拼音转英文格式
     const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
     if (seoMeta.slug && !slugRegex.test(seoMeta.slug)) {
       isValid = false;
-      errors.push({ field: 'slug', code: 'pattern', message: 'slug must match ^[a-z0-9]+(?:-[a-z0-9]+)*$ pattern.', currentValue: seoMeta.slug, requirement: 'lowercase a-z0-9 with hyphens' });
+      errors.push({
+        field: 'slug',
+        code: 'pattern',
+        message: 'slug must match ^[a-z0-9]+(?:-[a-z0-9]+)*$ pattern.',
+        currentValue: seoMeta.slug,
+        requirement: 'lowercase a-z0-9 with hyphens',
+      });
     }
 
     if (!isValid) {
-      log('warn', 'SeoValidator', 'SEO meta validation failed:', { errors, seoMeta });
+      log('warn', 'SeoValidator', 'SEO meta validation failed:', {
+        errors,
+        seoMeta,
+      });
     } else {
-      log('info', 'SeoValidator', 'SEO meta validated successfully.', { seoMeta });
+      log('info', 'SeoValidator', 'SEO meta validated successfully.', {
+        seoMeta,
+      });
     }
 
     return { valid: isValid, errors };
   }
 
   // 兼容旧接口：提供 strings 报告
-  validateSeoMetaDetailed(seoMeta: SeoMeta): { valid: boolean; errors: string[] } {
+  validateSeoMetaDetailed(seoMeta: SeoMeta): {
+    valid: boolean;
+    errors: string[];
+  } {
     const report = this.validateSeoMetaReport(seoMeta);
-    const errors = report.errors.map(e => `${e.field}: ${e.message}${e.currentLength !== undefined ? ` (current: ${e.currentLength})` : ''}`);
+    const errors = report.errors.map(
+      (e) =>
+        `${e.field}: ${e.message}${e.currentLength !== undefined ? ` (current: ${e.currentLength})` : ''}`,
+    );
     return { valid: report.valid, errors };
   }
 

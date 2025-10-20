@@ -23,7 +23,9 @@
     "moduleResolution": "node",
     "ignoreDeprecations": "6.0", // To silence deprecation warning for moduleResolution
     "baseUrl": "./",
+    "allowJs": true, // 新增
     "paths": {
+      "@/*": ["src/*"], // 新增，绝对路径别名（可选）
       "*": ["node_modules/*", "src/types/*"]
     },
     "typeRoots": ["node_modules/@types"],
@@ -31,11 +33,6 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

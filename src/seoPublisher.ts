@@ -26,28 +26,56 @@ export class SeoPublisher {
   async publishSeoMeta(article: any, seoMeta: SeoMeta): Promise<boolean> {
     const articleId = article?.metadata?.name;
     if (!articleId) {
-      log('error', 'SeoPublisher', 'Invalid article object provided to publishSeoMeta.', { article });
+      log(
+        'error',
+        'SeoPublisher',
+        'Invalid article object provided to publishSeoMeta.',
+        { article },
+      );
       return false;
     }
-    log('info', 'SeoPublisher', `Attempting to publish SEO meta for article ID: ${articleId}`, { articleId, seoMeta });
+    log(
+      'info',
+      'SeoPublisher',
+      `Attempting to publish SEO meta for article ID: ${articleId}`,
+      { articleId, seoMeta },
+    );
     try {
-      const { success, error } = await this.haloClient.updatePostSeoMeta(article, seoMeta);
+      const { success, error } = await this.haloClient.updatePostSeoMeta(
+        article,
+        seoMeta,
+      );
       if (success) {
-        log('info', 'SeoPublisher', `Successfully published SEO meta for article ID: ${articleId}`, { articleId, seoMeta });
+        log(
+          'info',
+          'SeoPublisher',
+          `Successfully published SEO meta for article ID: ${articleId}`,
+          { articleId, seoMeta },
+        );
         return true;
       } else {
-        log('error', 'SeoPublisher', `Failed to publish SEO meta for article ID: ${articleId}. Reason: ${error}`, { 
-          articleId: articleId,
-          error: error
-        });
+        log(
+          'error',
+          'SeoPublisher',
+          `Failed to publish SEO meta for article ID: ${articleId}. Reason: ${error}`,
+          {
+            articleId: articleId,
+            error: error,
+          },
+        );
         return false;
       }
     } catch (error: any) {
-      log('error', 'SeoPublisher', `Error publishing SEO meta for article ID: ${articleId}:`, {
-        articleId: articleId,
-        error: error.message,
-        stack: error.stack
-      });
+      log(
+        'error',
+        'SeoPublisher',
+        `Error publishing SEO meta for article ID: ${articleId}:`,
+        {
+          articleId: articleId,
+          error: error.message,
+          stack: error.stack,
+        },
+      );
       return false;
     }
   }

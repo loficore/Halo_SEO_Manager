@@ -41,7 +41,7 @@ export class Scheduler {
     haloClient: HaloClient,
     seoOptimizer: SeoOptimizer, // Accept SeoOptimizer instance
     seoValidator: SeoValidator, // Accept SeoValidator instance
-    seoPublisher: SeoPublisher  // Accept SeoPublisher instance
+    seoPublisher: SeoPublisher, // Accept SeoPublisher instance
   ) {
     this.dbManager = dbManager;
     this.haloClient = haloClient;
@@ -56,11 +56,16 @@ export class Scheduler {
    * @param cronExpression Cron表达式，默认为每小时执行一次 / Cron expression, defaults to once per hour
    */
   async start(cronExpression = '0 * * * *'): Promise<void> {
-    log('info', 'Scheduler', `Scheduler starting with cron expression: ${cronExpression}`, { cronExpression: cronExpression });
+    log(
+      'info',
+      'Scheduler',
+      `Scheduler starting with cron expression: ${cronExpression}`,
+      { cronExpression: cronExpression },
+    );
 
     // Sync articles with Halo at startup
     await this.syncArticlesWithHalo();
- 
+
     // 中文注释：立即执行一次，以便快速测试
     // English comment: Run once immediately for quick testing
     this.enqueueArticlesForOptimization();
@@ -68,7 +73,11 @@ export class Scheduler {
     // 中文注释：设置定时任务
     // English comment: Set up the cron job
     this.cronJob = cron.schedule(cronExpression, () => {
-      log('info', 'Scheduler', 'Cron job triggered: Checking for articles to optimize...');
+      log(
+        'info',
+        'Scheduler',
+        'Cron job triggered: Checking for articles to optimize...',
+      );
       this.enqueueArticlesForOptimization();
     });
 
@@ -98,8 +107,13 @@ export class Scheduler {
     // 等待当前正在处理的任务完成
     // Wait for any currently processing task to complete
     while (this.isProcessing) {
-      log('debug', 'Scheduler', 'Waiting for current queue processing to finish...', { isProcessing: this.isProcessing });
-      await new Promise(resolve => setTimeout(resolve, 100)); // 等待100ms
+      log(
+        'debug',
+        'Scheduler',
+        'Waiting for current queue processing to finish...',
+        { isProcessing: this.isProcessing },
+      );
+      await new Promise((resolve) => setTimeout(resolve, 100)); // 等待100ms
     }
     log('info', 'Scheduler', 'Scheduler stopped gracefully.');
   }
@@ -121,10 +135,15 @@ export class Scheduler {
       await this.dbManager.syncArticles(articles);
       log('info', 'Scheduler', 'Article synchronization with Halo completed.');
     } catch (err: any) {
-      log('error', 'Scheduler', 'Error during article synchronization with Halo:', {
-        error: err.message,
-        stack: err.stack
-      });
+      log(
+        'error',
+        'Scheduler',
+        'Error during article synchronization with Halo:',
+        {
+          error: err.message,
+          stack: err.stack,
+        },
+      );
     }
   }
 
@@ -135,21 +154,34 @@ export class Scheduler {
   private async enqueueArticlesForOptimization(): Promise<void> {
     log('info', 'Scheduler', 'Fetching articles for optimization...');
     try {
-      const articlesToOptimize = await this.dbManager.getArticlesForOptimization();
-      log('info', 'Scheduler', `Found ${articlesToOptimize.length} articles to optimize.`, { count: articlesToOptimize.length });
- 
+      const articlesToOptimize =
+        await this.dbManager.getArticlesForOptimization();
+      log(
+        'info',
+        'Scheduler',
+        `Found ${articlesToOptimize.length} articles to optimize.`,
+        { count: articlesToOptimize.length },
+      );
+
       for (const article of articlesToOptimize) {
         // 中文注释：避免重复入队
         // English comment: Avoid duplicate enqueuing
-        if (!this.taskQueue.some(item => item.article_id === article.article_id)) {
+        if (
+          !this.taskQueue.some((item) => item.article_id === article.article_id)
+        ) {
           this.taskQueue.push(article);
-          log('info', 'Scheduler', `Article "${article.title}" enqueued for optimization.`, { articleId: article.article_id, title: article.title });
+          log(
+            'info',
+            'Scheduler',
+            `Article "${article.title}" enqueued for optimization.`,
+            { articleId: article.article_id, title: article.title },
+          );
         }
       }
     } catch (err: any) {
       log('error', 'Scheduler', 'Error fetching articles for optimization:', {
         error: err.message,
-        stack: err.stack
+        stack: err.stack,
       });
     }
   }
@@ -165,9 +197,14 @@ export class Scheduler {
 
     this.isProcessing = true;
     const article = this.taskQueue.shift();
- 
+
     if (article) {
-      log('info', 'Scheduler', `Processing article: "${article.title}" (ID: ${article.article_id})`, { articleId: article.article_id, title: article.title });
+      log(
+        'info',
+        'Scheduler',
+        `Processing article: "${article.title}" (ID: ${article.article_id})`,
+        { articleId: article.article_id, title: article.title },
+      );
       let seoMeta: SeoMeta | null = null;
       let status: string = 'failed';
       let errorMessage: string | null = null;
@@ -186,21 +223,28 @@ export class Scheduler {
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
           optimizationAttempts = attempt;
           // Pass articleId and content separately
-          const optimizationResult: SeoMeta | null = await this.seoOptimizer.optimizeArticle(
-            article.article_id,
-            article.content,
-            { previous: previousSeoMeta, feedback: lastErrors, attempt }
-          );
+          const optimizationResult: SeoMeta | null =
+            await this.seoOptimizer.optimizeArticle(
+              article.article_id,
+              article.content,
+              { previous: previousSeoMeta, feedback: lastErrors, attempt },
+            );
           seoMeta = optimizationResult; // OptimizationResult is SeoMeta
 
           if (!seoMeta) {
             if (attempt < maxAttempts) {
-              log('warn', 'Scheduler', `Optimization returned empty result. Retrying (${attempt}/${maxAttempts})...`, { articleId: article.article_id });
-              await new Promise(r => setTimeout(r, 500 * attempt));
+              log(
+                'warn',
+                'Scheduler',
+                `Optimization returned empty result. Retrying (${attempt}/${maxAttempts})...`,
+                { articleId: article.article_id },
+              );
+              await new Promise((r) => setTimeout(r, 500 * attempt));
               continue;
             } else {
               status = 'failed_optimization';
-              errorMessage = 'SEO optimization failed after retries (empty result).';
+              errorMessage =
+                'SEO optimization failed after retries (empty result).';
               break;
             }
           }
@@ -214,25 +258,45 @@ export class Scheduler {
             if (!rawPost) {
               status = 'failed_publish';
               errorMessage = `Could not find raw post data in cache for article ID: ${article.article_id}.`;
-              log('error', 'Scheduler', errorMessage, { articleId: article.article_id });
-              break; 
+              log('error', 'Scheduler', errorMessage, {
+                articleId: article.article_id,
+              });
+              break;
             }
-            const publishSuccess = await this.seoPublisher.publishSeoMeta(rawPost, seoMeta);
+            const publishSuccess = await this.seoPublisher.publishSeoMeta(
+              rawPost,
+              seoMeta,
+            );
             if (publishSuccess) {
               status = 'success';
-              log('info', 'Scheduler', `Successfully published SEO meta for article: "${article.title}"`, { articleId: article.article_id, attempt });
+              log(
+                'info',
+                'Scheduler',
+                `Successfully published SEO meta for article: "${article.title}"`,
+                { articleId: article.article_id, attempt },
+              );
             } else {
               status = 'failed_publish';
               errorMessage = 'Failed to publish SEO meta to Halo CMS.';
-              log('error', 'Scheduler', `Failed to publish SEO meta for article: "${article.title}"`, { articleId: article.article_id, attempt, errorMessage });
+              log(
+                'error',
+                'Scheduler',
+                `Failed to publish SEO meta for article: "${article.title}"`,
+                { articleId: article.article_id, attempt, errorMessage },
+              );
             }
             break; // either success or publish failed — don't retry further
           } else {
             if (attempt < maxAttempts) {
               previousSeoMeta = seoMeta;
-              lastErrors = errors.map(e => e.message);
-              log('warn', 'Scheduler', `SEO meta validation failed. Retrying generation (${attempt}/${maxAttempts})...`, { articleId: article.article_id, attempt, errors });
-              await new Promise(r => setTimeout(r, 500 * attempt));
+              lastErrors = errors.map((e) => e.message);
+              log(
+                'warn',
+                'Scheduler',
+                `SEO meta validation failed. Retrying generation (${attempt}/${maxAttempts})...`,
+                { articleId: article.article_id, attempt, errors },
+              );
+              await new Promise((r) => setTimeout(r, 500 * attempt));
               continue;
             } else {
               status = 'failed_validation';
@@ -243,17 +307,33 @@ export class Scheduler {
         }
         durationMs = Date.now() - startedAt;
         if (status === 'success') {
-          log('info', 'Scheduler', `Finished processing article: "${article.title}"`, { articleId: article.article_id, attempts: optimizationAttempts, durationMs });
-          log('debug', 'Scheduler', 'Generated SEO Meta:', { seoMeta: seoMeta });
+          log(
+            'info',
+            'Scheduler',
+            `Finished processing article: "${article.title}"`,
+            {
+              articleId: article.article_id,
+              attempts: optimizationAttempts,
+              durationMs,
+            },
+          );
+          log('debug', 'Scheduler', 'Generated SEO Meta:', {
+            seoMeta: seoMeta,
+          });
         }
       } catch (err: any) {
         status = 'failed';
         errorMessage = err.message;
-        log('error', 'Scheduler', `Error processing article "${article.title}":`, {
-          articleId: article.article_id,
-          error: err.message,
-          stack: err.stack
-        });
+        log(
+          'error',
+          'Scheduler',
+          `Error processing article "${article.title}":`,
+          {
+            articleId: article.article_id,
+            error: err.message,
+            stack: err.stack,
+          },
+        );
       } finally {
         // 记录SEO运行结果
         await this.dbManager.recordSeoRun(
@@ -270,9 +350,14 @@ export class Scheduler {
           tokenUsage,
           durationMs,
           optimizationAttempts,
-          modelVersion
+          modelVersion,
         );
-        log('debug', 'Scheduler', `Recorded SEO run for article: "${article.title}" with status: ${status}`, { articleId: article.article_id, status: status });
+        log(
+          'debug',
+          'Scheduler',
+          `Recorded SEO run for article: "${article.title}" with status: ${status}`,
+          { articleId: article.article_id, status: status },
+        );
       }
     }
 

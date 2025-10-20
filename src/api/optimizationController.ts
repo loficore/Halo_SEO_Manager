@@ -65,11 +65,9 @@ export const createOptimizationController = (
             stack: error.stack,
           },
         );
-        return res
-          .status(500)
-          .json({
-            message: 'Internal server error while listing optimization runs.',
-          });
+        return res.status(500).json({
+          message: 'Internal server error while listing optimization runs.',
+        });
       }
     },
   );
@@ -125,11 +123,9 @@ export const createOptimizationController = (
             stack: error.stack,
           },
         );
-        return res
-          .status(500)
-          .json({
-            message: 'Internal server error while retrieving optimization run.',
-          });
+        return res.status(500).json({
+          message: 'Internal server error while retrieving optimization run.',
+        });
       }
     },
   );

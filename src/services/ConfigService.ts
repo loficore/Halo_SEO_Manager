@@ -31,10 +31,13 @@ export class ConfigService {
     // 使用新的 DAO 层获取所有设置
     const settingsRows = await this.databaseManager.settings.getAllSettings();
     // 将结果数组转换为键值对映射
-    const settingsMap = settingsRows.reduce((acc, row) => {
-      acc[row.key] = row.value;
-      return acc;
-    }, {} as Record<string, string>);
+    const settingsMap = settingsRows.reduce(
+      (acc, row) => {
+        acc[row.key] = row.value;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
     log(
       'debug',
       Modules.ConfigService,
@@ -102,7 +105,10 @@ export class ConfigService {
     }
 
     // 使用新的 DAO 层设置核心配置，确保所有字段都被设置，即使是默认值
-    await this.databaseManager.settings.upsertSetting('is_system_initialized', 'true');
+    await this.databaseManager.settings.upsertSetting(
+      'is_system_initialized',
+      'true',
+    );
     await this.databaseManager.settings.upsertSetting(
       'database_path',
       request.databasePath || 'seo_manager.db',

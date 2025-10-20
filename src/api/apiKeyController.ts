@@ -192,11 +192,9 @@ router.delete(
           .status(200)
           .json({ message: `API Key with ID ${id} deleted successfully.` });
       } else {
-        return res
-          .status(404)
-          .json({
-            message: `API Key with ID ${id} not found or not authorized to delete.`,
-          });
+        return res.status(404).json({
+          message: `API Key with ID ${id} not found or not authorized to delete.`,
+        });
       }
     } catch (error: any) {
       log(

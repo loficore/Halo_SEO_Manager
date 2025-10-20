@@ -105,11 +105,9 @@ export const authMiddleware = (
           'Error during API Key validation:',
           { error: error.message, stack: error.stack },
         );
-        return res
-          .status(500)
-          .json({
-            message: 'Internal server error during API Key validation.',
-          });
+        return res.status(500).json({
+          message: 'Internal server error during API Key validation.',
+        });
       }
     }
 
@@ -122,11 +120,9 @@ export const authMiddleware = (
         Modules.AuthMiddleware,
         'No authentication credentials provided.',
       );
-      return res
-        .status(401)
-        .json({
-          message: 'Unauthorized: No authentication credentials provided.',
-        });
+      return res.status(401).json({
+        message: 'Unauthorized: No authentication credentials provided.',
+      });
     }
   };
 };

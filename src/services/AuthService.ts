@@ -71,7 +71,7 @@ export class AuthService {
     // Assuming a method to count admin users exists in UserTable
     // If not, this logic might need to be implemented here or in UserTable
     const allUsers = await this.dbManager.users.getAllUsers();
-    return allUsers.filter(user => user.role === 'admin').length;
+    return allUsers.filter((user) => user.role === 'admin').length;
   }
 
   // 添加 getUserByUsername 方法
@@ -101,7 +101,9 @@ export class AuthService {
       const decodedPayload = await this.melodyAuthClient.verifyToken(token);
 
       if (decodedPayload && decodedPayload.userId && decodedPayload.role) {
-        const user = await this.dbManager.users.getUserById(decodedPayload.userId);
+        const user = await this.dbManager.users.getUserById(
+          decodedPayload.userId,
+        );
         if (user) {
           return {
             userId: user.id,
@@ -135,7 +137,9 @@ export class AuthService {
   async login(loginData: LoginRequestDTO): Promise<AuthResultDTO> {
     try {
       // 1. 在本地数据库中查找用户
-      const user = await this.dbManager.users.getUserByUsername(loginData.username);
+      const user = await this.dbManager.users.getUserByUsername(
+        loginData.username,
+      );
       if (!user) {
         log(
           'warn',
@@ -500,9 +504,7 @@ export class AuthService {
    * @param {string} userId - 用户ID。
    * @returns {Promise<{ success: boolean; secret?: string; qrcodeUrl?: string; message?: string }>} MFA启用结果，包含MFA密钥和二维码URL。
    */
-  async enableMfa(
-    userId: string,
-  ): Promise<{
+  async enableMfa(userId: string): Promise<{
     success: boolean;
     secret?: string;
     qrcodeUrl?: string;

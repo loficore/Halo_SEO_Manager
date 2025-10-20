@@ -56,7 +56,9 @@ export class TaskService {
         article_id: createTaskRequest.articleId,
         schedule_cron: createTaskRequest.scheduleCron,
         llm_model: createTaskRequest.llmModel,
-        optimization_params: JSON.stringify(createTaskRequest.optimizationParams),
+        optimization_params: JSON.stringify(
+          createTaskRequest.optimizationParams,
+        ),
         status: TaskStatus.PENDING,
       };
 
@@ -64,7 +66,8 @@ export class TaskService {
       await this.dbManager.scheduledTasks.createScheduledTask(taskData);
 
       // 创建后从数据库获取完整的任务信息
-      const newTask = await this.dbManager.scheduledTasks.getScheduledTaskById(taskId);
+      const newTask =
+        await this.dbManager.scheduledTasks.getScheduledTaskById(taskId);
       if (!newTask) {
         throw new Error('Failed to retrieve the created task.');
       }
@@ -109,7 +112,8 @@ export class TaskService {
     log('info', 'TaskService', `Fetching tasks for user ID: ${userId}.`);
     try {
       // 使用新的 DAO 层获取用户任务
-      const tasks = await this.dbManager.scheduledTasks.getScheduledTasksByUserId(userId);
+      const tasks =
+        await this.dbManager.scheduledTasks.getScheduledTasksByUserId(userId);
       log(
         'info',
         'TaskService',
@@ -163,7 +167,8 @@ export class TaskService {
     log('info', 'TaskService', `Fetching task by ID: ${taskId}.`);
     try {
       // 使用新的 DAO 层根据 ID 获取任务
-      const task = await this.dbManager.scheduledTasks.getScheduledTaskById(taskId);
+      const task =
+        await this.dbManager.scheduledTasks.getScheduledTaskById(taskId);
       if (task) {
         log('info', 'TaskService', `Task found with ID: ${taskId}.`, {
           taskId,
@@ -269,16 +274,21 @@ export class TaskService {
     log('info', 'TaskService', `Attempting to schedule task ID: ${taskId}.`);
     try {
       // 使用新的 DAO 层获取任务并更新状态
-      const task = await this.dbManager.scheduledTasks.getScheduledTaskById(taskId);
+      const task =
+        await this.dbManager.scheduledTasks.getScheduledTaskById(taskId);
       if (!task) {
         throw new Error(`Task with ID ${taskId} not found.`);
       }
       // 假设调度器有明确添加/更新计划任务的方法
       // this.scheduler.addOrUpdateTask(task);
       // 目前，我们只需将其状态更新为 PENDING，并依赖调度器来获取它。
-      await this.dbManager.scheduledTasks.updateScheduledTask(taskId, task.userId, {
-        status: TaskStatus.PENDING,
-      });
+      await this.dbManager.scheduledTasks.updateScheduledTask(
+        taskId,
+        task.userId,
+        {
+          status: TaskStatus.PENDING,
+        },
+      );
       log('info', 'TaskService', `Task ID: ${taskId} scheduled successfully.`);
     } catch (error: any) {
       log('error', 'TaskService', `Failed to schedule task ID ${taskId}:`, {
@@ -334,7 +344,8 @@ export class TaskService {
     log('info', 'TaskService', `Getting status for task ID: ${taskId}.`);
     try {
       // 使用新的 DAO 层获取任务状态
-      const task = await this.dbManager.scheduledTasks.getScheduledTaskById(taskId);
+      const task =
+        await this.dbManager.scheduledTasks.getScheduledTaskById(taskId);
       if (task) {
         log(
           'info',
@@ -379,13 +390,18 @@ export class TaskService {
     );
     try {
       // 使用新的 DAO 层更新任务状态
-      const task = await this.dbManager.scheduledTasks.getScheduledTaskById(taskId);
+      const task =
+        await this.dbManager.scheduledTasks.getScheduledTaskById(taskId);
       if (!task) {
         throw new Error(`Task with ID ${taskId} not found.`);
       }
-      await this.dbManager.scheduledTasks.updateScheduledTask(taskId, task.userId, {
-        status: newStatus,
-      });
+      await this.dbManager.scheduledTasks.updateScheduledTask(
+        taskId,
+        task.userId,
+        {
+          status: newStatus,
+        },
+      );
       log(
         'info',
         'TaskService',

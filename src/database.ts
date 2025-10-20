@@ -103,13 +103,22 @@ export class DatabaseManager {
     // For now, we only have one migration: V1__initial_schema
     // In the future, we can scan the migrations directory and apply them in order.
     const migrationVersion = 'V1__initial_schema';
-    const result = await this.db!.get('SELECT version FROM schema_migrations WHERE version = ?', [migrationVersion]);
+    const result = await this.db!.get(
+      'SELECT version FROM schema_migrations WHERE version = ?',
+      [migrationVersion],
+    );
 
     if (!result) {
       log('info', 'Database', `Applying migration: ${migrationVersion}`);
       await this.db!.exec(INITIAL_SCHEMA);
-      await this.db!.run('INSERT INTO schema_migrations (version) VALUES (?)', [migrationVersion]);
-      log('info', 'Database', `Migration ${migrationVersion} applied successfully.`);
+      await this.db!.run('INSERT INTO schema_migrations (version) VALUES (?)', [
+        migrationVersion,
+      ]);
+      log(
+        'info',
+        'Database',
+        `Migration ${migrationVersion} applied successfully.`,
+      );
     } else {
       log('info', 'Database', `Migration ${migrationVersion} already applied.`);
     }

@@ -6,14 +6,15 @@
 /**
  * 日志级别枚举。
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export enum LogLevel {
-  ERROR = 'error',
-  WARN = 'warn',
-  INFO = 'info',
-  HTTP = 'http',
-  VERBOSE = 'verbose',
-  DEBUG = 'debug',
-  SILLY = 'silly',
+  ERROR = 'error', // eslint-disable-line @typescript-eslint/no-unused-vars
+  WARN = 'warn', // eslint-disable-line @typescript-eslint/no-unused-vars
+  INFO = 'info', // eslint-disable-line @typescript-eslint/no-unused-vars
+  HTTP = 'http', // eslint-disable-line @typescript-eslint/no-unused-vars
+  VERBOSE = 'verbose', // eslint-disable-line @typescript-eslint/no-unused-vars
+  DEBUG = 'debug', // eslint-disable-line @typescript-eslint/no-unused-vars
+  SILLY = 'silly', // eslint-disable-line @typescript-eslint/no-unused-vars
 }
 
 /**
@@ -24,7 +25,7 @@ export interface LogEntry {
   level: LogLevel;
   module: string; // 记录日志的模块，例如 'AuthService', 'ConfigService'
   message: string;
-  [key: string]: any; // 允许其他任意属性
+  [key: string]: unknown; // 允许其他任意属性
 }
 
 /**

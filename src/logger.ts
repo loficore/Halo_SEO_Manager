@@ -1,3 +1,8 @@
+/**
+ * @file logger.ts
+ * @description 日志记录模块，提供结构化的日志记录功能
+ */
+
 import winston from 'winston';
 import 'winston-daily-rotate-file';
 import path from 'path';
@@ -68,14 +73,16 @@ export type ModuleKey = (typeof Modules)[keyof typeof Modules];
 // 定义日志格式
 const logFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
-  winston.format.printf((info: any) => {
-    // 将 info 强制转换为 any
+  winston.format.printf((info: unknown) => {
+    const infoObj = info as Record<string, unknown>;
     // 优先从 info.module 获取，如果不存在则从 info.metadata?.module 获取
     const actualModuleName =
-      info.module || info.metadata?.module || Modules.App;
-    const { timestamp, level, message, module, ...meta } = info; // 排除 module 出 meta
+      (infoObj.module as string) ||
+      ((infoObj.metadata as Record<string, unknown>)?.module as string) ||
+      Modules.App;
+    const { timestamp, level, message, ...meta } = infoObj; // 排除 module 出 meta
     const context = Object.keys(meta).length ? JSON.stringify(meta) : '';
-    return `[${timestamp}] [${level.toUpperCase()}] [${actualModuleName}] ${message} ${context}`;
+    return `[${timestamp as string}] [${String(level).toUpperCase()}] [${actualModuleName}] ${message as string} ${context}`;
   }),
 );
 
@@ -85,6 +92,7 @@ const metaFormat = winston.format.metadata({
 });
 
 // 定义一个格式化器，将 info.metadata.module 提升到 info.module（如果 module 不存在）
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const promoteModuleToInfo = winston.format((info: any) => {
   if (!info.module && info.metadata && info.metadata.module) {
     info.module = info.metadata.module;
@@ -94,6 +102,7 @@ const promoteModuleToInfo = winston.format((info: any) => {
 
 // 模块过滤器（大小写不敏感 + 兼容 metadata.module）
 const createModuleFilter = (moduleName: ModuleKey) =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   winston.format((info: any) => {
     const actual = String(info.module ?? info.metadata?.module ?? Modules.App);
     return actual.toLowerCase() === moduleName.toLowerCase() ? info : false;
@@ -135,6 +144,7 @@ const createApplicationTransport = () => {
   transport.format = winston.format.combine(
     metaFormat,
     promoteModuleToInfo,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     winston.format((info: any) => {
       const actual = info.module || info.metadata?.module;
       return !actual || actual === Modules.App ? info : false;
@@ -207,13 +217,16 @@ export const log = (
   level: keyof typeof levels,
   moduleName: ModuleKey,
   message: string,
-  meta: Record<string, any> = {},
+  meta: Record<string, unknown> = {},
 ) => {
   logger.log({ level, message, module: moduleName, ...meta });
 };
 
 // 专门用于 LLM SEO 生成日志的函数
-export const logLLMSeoGeneration = (message: string, seoMeta?: object) => {
+export const logLLMSeoGeneration = (
+  message: string,
+  seoMeta?: Record<string, unknown>,
+) => {
   logger.info(message, { module: Modules.LlmSeoGenerations, seoMeta });
 };
 
@@ -232,10 +245,11 @@ export const initLogger = () => {
       try {
         fs.unlinkSync(file);
         logger.info(`Removed old log file: ${file}`, { module: Modules.App });
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
         logger.error(`Failed to remove old log file: ${file}`, {
           module: Modules.App,
-          error: err,
+          error: errorMessage,
         });
       }
     }

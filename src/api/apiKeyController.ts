@@ -12,13 +12,23 @@ import { AuthenticatedRequest } from '../types/request'; // 导入 Authenticated
 import { authMiddleware } from '../middleware/authMiddleware'; // 导入认证中间件
 import { AuthService } from '../services/AuthService'; // 导入 AuthService (用于authMiddleware)
 import { ConfigService } from '../services/ConfigService'; // 导入 ConfigService (用于authMiddleware)
-import { MelodyAuthClient } from '../services/melodyAuthClient'; // 导入 MelodyAuthClient (用于authMiddleware)
+import { JwtService } from '../services/JwtService'; // 导入 JwtService
+import { MfaService } from '../services/MfaService'; // 导入 MfaService
+import { PasswordService } from '../services/PasswordService'; // 导入 PasswordService
 
 const router = Router();
 const dbManager = new DatabaseManager(); // 应该从DI容器获取，这里简化
-const melodyAuthClient = new MelodyAuthClient('http://localhost:3001'); // 假设MelodyAuth运行在3001端口
 const configService = new ConfigService(dbManager); // 实例化 ConfigService
-const authService = new AuthService(dbManager, melodyAuthClient, configService); // 实例化 AuthService
+const jwtService = new JwtService(); // 实例化 JwtService
+const mfaService = new MfaService(); // 实例化 MfaService
+const passwordService = new PasswordService(); // 实例化 PasswordService
+const authService = new AuthService(
+  dbManager,
+  configService,
+  jwtService,
+  mfaService,
+  passwordService
+); // 实例化 AuthService
 const apiKeyService = new ApiKeyService(dbManager);
 const apiAuthMiddleware = authMiddleware(authService, apiKeyService); // 创建认证中间件实例
 
@@ -47,14 +57,17 @@ router.get(
     try {
       const apiKeys = await apiKeyService.listApiKeys(req.user.id);
       return res.status(200).json(apiKeys);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
       log(
         'error',
         Modules.ApiKeyController,
         `Error listing API Keys for user ${req.user.id}:`,
         {
-          error: error.message,
-          stack: error.stack,
+          error: errorMessage,
+          stack: errorStack,
         },
       );
       return res
@@ -132,14 +145,17 @@ router.post(
           updatedAt: newApiKeyResponse.updatedAt,
         },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
       log(
         'error',
         Modules.ApiKeyController,
         `Error creating API Key for user ${req.user.id} with name ${name}:`,
         {
-          error: error.message,
-          stack: error.stack,
+          error: errorMessage,
+          stack: errorStack,
         },
       );
       return res
@@ -196,14 +212,17 @@ router.delete(
           message: `API Key with ID ${id} not found or not authorized to delete.`,
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
       log(
         'error',
         Modules.ApiKeyController,
         `Error deleting API Key ${id} for user ${req.user.id}:`,
         {
-          error: error.message,
-          stack: error.stack,
+          error: errorMessage,
+          stack: errorStack,
         },
       );
       return res

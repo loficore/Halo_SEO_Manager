@@ -6,10 +6,14 @@
 /**
  * API Key 类型枚举。
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export enum ApiKeyType {
-  LLM = 'LLM', // 用于大型语言模型
-  HALO = 'HALO', // 用于 Halo CMS 交互
-  OTHER = 'OTHER', // 其他类型
+  // 用于大型语言模型
+  LLM = 'LLM', // eslint-disable-line @typescript-eslint/no-unused-vars
+  // 用于 Halo CMS 交互
+  HALO = 'HALO', // eslint-disable-line @typescript-eslint/no-unused-vars
+  // 其他类型
+  OTHER = 'OTHER', // eslint-disable-line @typescript-eslint/no-unused-vars
 }
 
 /**

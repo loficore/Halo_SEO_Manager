@@ -1,3 +1,8 @@
+/**
+ * @file ApiKeyTable.ts
+ * @description API Key 数据访问对象，负责处理 API Key 相关的数据库操作
+ */
+
 import { Database } from 'sqlite';
 import {
   INSERT_API_KEY,
@@ -6,10 +11,22 @@ import {
   GET_API_KEY_BY_HASH,
   UPDATE_API_KEY,
   DELETE_API_KEY_BY_ID,
-} from '../sql/dao/apiKeys.sql';
+} from './apiKeys.sql';
 
+/**
+ * @class ApiKeyTable
+ * @description API Key 数据访问对象类，提供 API Key 的增删改查操作
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export class ApiKeyTable {
-  constructor(private db: Database) {}
+  /**
+   * @constructor
+   * @param {Database} db - SQLite 数据库实例
+   */
+  constructor(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private db: Database,
+  ) {}
 
   async createApiKey(apiKey: {
     id: string;

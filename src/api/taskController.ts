@@ -13,13 +13,23 @@ import { AuthService } from '../services/AuthService'; // 导入 AuthService (�
 import { ApiKeyService } from '../services/ApiKeyService'; // 导入 ApiKeyService (用于authMiddleware)
 import { ConfigService } from '../services/ConfigService'; // 导入 ConfigService (用于authMiddleware)
 import { DatabaseManager } from '../database'; // 导入 DatabaseManager (用于authMiddleware)
-import { MelodyAuthClient } from '../services/melodyAuthClient'; // 导入 MelodyAuthClient (用于authMiddleware)
+import { JwtService } from '../services/JwtService'; // 导入 JwtService
+import { MfaService } from '../services/MfaService'; // 导入 MfaService
+import { PasswordService } from '../services/PasswordService'; // 导入 PasswordService
 
 // 依赖注入应该在主文件中完成，这里为了保持自洽性进行实例化
 const dbManager = new DatabaseManager();
-const melodyAuthClient = new MelodyAuthClient('http://localhost:3001'); // 假设MelodyAuth运行在3001端口
 const configService = new ConfigService(dbManager);
-const authService = new AuthService(dbManager, melodyAuthClient, configService);
+const jwtService = new JwtService();
+const mfaService = new MfaService();
+const passwordService = new PasswordService();
+const authService = new AuthService(
+  dbManager,
+  configService,
+  jwtService,
+  mfaService,
+  passwordService
+);
 const apiKeyService = new ApiKeyService(dbManager);
 const apiAuthMiddleware = authMiddleware(authService, apiKeyService);
 
@@ -55,14 +65,16 @@ export const createTaskController = (taskService: TaskService): Router => {
       try {
         const tasks = await taskService.getTasksByUserId(req.user.id);
         return res.status(200).json(tasks);
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
         log(
           'error',
           Modules.TaskController,
           `Error listing tasks for user ${req.user.id}:`,
           {
-            error: error.message,
-            stack: error.stack,
+            error: errorMessage,
+            stack: errorStack,
           },
         );
         return res
@@ -131,14 +143,16 @@ export const createTaskController = (taskService: TaskService): Router => {
       try {
         const newTask = await taskService.createTask(createTaskRequest);
         return res.status(201).json(newTask);
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
         log(
           'error',
           Modules.TaskController,
           `Error creating task for user ${req.user.id}:`,
           {
-            error: error.message,
-            stack: error.stack,
+            error: errorMessage,
+            stack: errorStack,
           },
         );
         return res
@@ -212,18 +226,20 @@ export const createTaskController = (taskService: TaskService): Router => {
         return res
           .status(200)
           .json({ message: `Task with ID ${id} updated successfully.` });
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
         log(
           'error',
           Modules.TaskController,
           `Error updating task ${id} for user ${req.user.id}:`,
           {
-            error: error.message,
-            stack: error.stack,
+            error: errorMessage,
+            stack: errorStack,
           },
         );
-        if (error.message.includes('not found or unauthorized')) {
-          return res.status(404).json({ message: error.message });
+        if (errorMessage.includes('not found or unauthorized')) {
+          return res.status(404).json({ message: errorMessage });
         }
         return res
           .status(500)
@@ -273,18 +289,20 @@ export const createTaskController = (taskService: TaskService): Router => {
         return res
           .status(200)
           .json({ message: `Task with ID ${id} deleted successfully.` });
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
         log(
           'error',
           Modules.TaskController,
           `Error deleting task ${id} for user ${req.user.id}:`,
           {
-            error: error.message,
-            stack: error.stack,
+            error: errorMessage,
+            stack: errorStack,
           },
         );
-        if (error.message.includes('not found or unauthorized')) {
-          return res.status(404).json({ message: error.message });
+        if (errorMessage.includes('not found or unauthorized')) {
+          return res.status(404).json({ message: errorMessage });
         }
         return res
           .status(500)

@@ -42,6 +42,7 @@ export class SeoPublisher {
     );
     try {
       const { success, error } = await this.haloClient.updatePostSeoMeta(
+        articleId,
         article,
         seoMeta,
       );

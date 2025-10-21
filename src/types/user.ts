@@ -6,9 +6,10 @@
 /**
  * 用户角色枚举。
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export enum UserRole {
-  ADMIN = 'admin',
-  USER = 'user',
+  ADMIN = 'admin', // eslint-disable-line @typescript-eslint/no-unused-vars
+  USER = 'user', // eslint-disable-line @typescript-eslint/no-unused-vars
 }
 
 /**

@@ -22,7 +22,7 @@ interface HaloPost {
     annotations?: {
       [key: string]: string;
     };
-    [key: string]: any;
+    [key: string]: unknown;
   };
   spec: {
     title: string;
@@ -34,14 +34,14 @@ interface HaloPost {
     categories?: string[];
     deleted?: boolean;
     publish?: boolean;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   status: {
     excerpt?: string;
     permalink?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -53,7 +53,7 @@ interface RawHaloPostData {
   post: HaloPost;
   categories: { spec: { displayName: string } }[];
   tags: { spec: { displayName: string } }[];
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -127,13 +127,13 @@ export class HaloClient {
    * @template T - 响应数据的类型。
    * @param {string} method - HTTP方法 (GET, POST, PUT, PATCH, DELETE)。
    * @param {string} endpoint - API端点。
-   * @param {any} [config={}] - 请求配置，例如数据、头部等。
+   * @param {Record<string, unknown>} [config={}] - 请求配置，例如数据、头部等。
    * @returns {Promise<AxiosResponse<T> | null>} Axios响应对象或null。
    */
   private async makeRequest<T>(
     method: string,
     endpoint: string,
-    config: any = {},
+    config: Record<string, unknown> = {},
   ): Promise<AxiosResponse<T> | null> {
     const url = `${this.baseUrl}${endpoint}`;
     log('debug', 'HaloClient', `Making request: ${method} ${url}`);
@@ -144,12 +144,16 @@ export class HaloClient {
         ...config,
       });
       return response;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      const errorStack = err instanceof Error ? err.stack : undefined;
+      const errorResponse = (err as Record<string, unknown>)
+        ?.response as Record<string, unknown>;
       log('error', 'HaloClient', `Request to ${url} failed:`, {
-        error: err.response?.data || err.message,
+        error: errorResponse?.data || errorMessage,
         url: url,
         method: method,
-        stack: err.stack,
+        stack: errorStack,
       });
       throw err; // Rethrow the error to be handled by the calling function
     }
@@ -160,14 +164,20 @@ export class HaloClient {
    * @description English: Get list of posts.
    * @param {number} [page=1] - 页码。
    * @param {number} [size=10] - 每页大小。
-   * @returns {Promise<any>} 文章列表数据或null。
+   * @returns {Promise<Record<string, unknown> | null>} 文章列表数据或null。
    */
-  async getPosts(page: number = 1, size: number = 10): Promise<any> {
+  async getPosts(
+    page: number = 1,
+    size: number = 10,
+  ): Promise<Record<string, unknown> | null> {
     const endpoint = `/apis/api.console.halo.run/v1alpha1/posts?page=${page}&size=${size}`;
     try {
-      const response = await this.makeRequest<any>('GET', endpoint);
+      const response = await this.makeRequest<Record<string, unknown>>(
+        'GET',
+        endpoint,
+      );
       return response ? response.data : null;
-    } catch (error) {
+    } catch {
       // The interceptor will log the error, so we just return null here.
       return null;
     }
@@ -188,26 +198,42 @@ export class HaloClient {
 
     for (const endpoint of endpoints) {
       try {
-        const response = await this.makeRequest<any>('GET', endpoint);
+        const response = await this.makeRequest<Record<string, unknown>>(
+          'GET',
+          endpoint,
+        );
         if (response && response.data) {
           let content: string | undefined;
+          const responseData = response.data as Record<string, unknown>;
           // 尝试从不同的路径提取内容
           // 检查 content 字段，如果存在且为字符串，则直接使用
-          if (typeof response.data.content === 'string') {
-            content = response.data.content;
+          if (typeof responseData.content === 'string') {
+            content = responseData.content;
           } else if (
-            response.data.content &&
-            typeof response.data.content.raw === 'string'
+            responseData.content &&
+            typeof (responseData.content as Record<string, unknown>).raw ===
+              'string'
           ) {
             // 如果 content 是一个对象，且其 raw 属性为字符串，则使用 raw 属性
-            content = response.data.content.raw;
+            content = (responseData.content as Record<string, unknown>)
+              .raw as string;
           } else if (
-            response.data.spec &&
-            response.data.spec.content &&
-            typeof response.data.spec.content.raw === 'string'
+            responseData.spec &&
+            (responseData.spec as Record<string, unknown>).content &&
+            typeof (
+              (responseData.spec as Record<string, unknown>).content as Record<
+                string,
+                unknown
+              >
+            ).raw === 'string'
           ) {
             // 如果内容在 spec.content.raw 中
-            content = response.data.spec.content.raw;
+            content = (
+              (responseData.spec as Record<string, unknown>).content as Record<
+                string,
+                unknown
+              >
+            ).raw as string;
           }
 
           if (content !== undefined) {
@@ -237,7 +263,11 @@ export class HaloClient {
             );
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        const errorStack = err instanceof Error ? err.stack : undefined;
+        const errorResponse = (err as Record<string, unknown>)
+          ?.response as Record<string, unknown>;
         log(
           'warn',
           'HaloClient',
@@ -245,8 +275,8 @@ export class HaloClient {
           {
             postName: postName,
             endpoint: endpoint,
-            error: err.response?.status || err.message,
-            stack: err.stack,
+            error: (errorResponse?.status as string) || errorMessage,
+            stack: errorStack,
           },
         );
       }
@@ -274,11 +304,13 @@ export class HaloClient {
       let postsData;
       try {
         postsData = await this.getPosts(page, 20);
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        const errorStack = err instanceof Error ? err.stack : undefined;
         log('error', 'HaloClient', `Error fetching posts on page ${page}:`, {
           page: page,
-          error: err.message,
-          stack: err.stack,
+          error: errorMessage,
+          stack: errorStack,
         });
         break; // Stop fetching if an error occurs
       }
@@ -287,7 +319,8 @@ export class HaloClient {
         break;
       }
 
-      const posts: RawHaloPostData[] = postsData.items;
+      const posts: RawHaloPostData[] =
+        postsData.items as unknown as RawHaloPostData[];
       allPosts.push(...posts);
 
       // 中文注释：如果当前页没有数据，则停止获取更多页面
@@ -342,7 +375,7 @@ export class HaloClient {
 
       // 3. 获取文章内容
       // Get article content
-      let content: string = await this.getPostContent(articleId);
+      const content: string = await this.getPostContent(articleId);
       if (!content) {
         log(
           'warn',
@@ -383,15 +416,17 @@ export class HaloClient {
         last_optimized: null,
         force_reoptimize: false,
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      const errorStack = err instanceof Error ? err.stack : undefined;
       log(
         'error',
         'HaloClient',
         `Error extracting article data for post: ${rawPostData.post?.metadata?.name || 'unknown'}:`,
         {
           postName: rawPostData.post?.metadata?.name || 'unknown',
-          error: err.message,
-          stack: err.stack,
+          error: errorMessage,
+          stack: errorStack,
         },
       );
       return null;
@@ -401,12 +436,15 @@ export class HaloClient {
    * @description 获取单篇文章的完整信息。
    * @description English: Get complete information for a single post.
    * @param {string} postName - 文章的名称 (对应Halo的post name)。
-   * @returns {Promise<any | null>} 完整的Halo文章对象，如果未找到则返回null。
+   * @returns {Promise<Record<string, unknown> | null>} 完整的Halo文章对象，如果未找到则返回null。
    */
-  async getPost(postName: string): Promise<any | null> {
+  async getPost(postName: string): Promise<Record<string, unknown> | null> {
     const endpoint = `/apis/content.halo.run/v1alpha1/posts/${postName}`; // 更新为新的API端点
     try {
-      const response = await this.makeRequest<any>('GET', endpoint);
+      const response = await this.makeRequest<Record<string, unknown>>(
+        'GET',
+        endpoint,
+      );
       if (response && response.data) {
         return response.data;
       }
@@ -427,13 +465,13 @@ export class HaloClient {
    * @description 更新文章的SEO元数据到Halo CMS，使用JSON Patch。
    * @description English: Update article's SEO meta data to Halo CMS using JSON Patch.
    * @param {string} postName - 文章的名称 (对应Halo的post name)。
-   * @param {any} originalPost - 文章的原始Halo对象，用于生成JSON Patch。
+   * @param {Record<string, unknown>} originalPost - 文章的原始Halo对象，用于生成JSON Patch。
    * @param {SeoMeta} seoMeta - 包含要更新的SEO元数据。
    * @returns {Promise<{ success: boolean; error?: string }>} 表示更新操作是否成功及其错误信息。
    */
   async updatePostSeoMeta(
     postName: string,
-    originalPost: any,
+    originalPost: Record<string, unknown>,
     seoMeta: SeoMeta,
   ): Promise<{ success: boolean; error?: string }> {
     if (!postName) {
@@ -492,12 +530,16 @@ export class HaloClient {
         `Sending PATCH request with payload for article ID: ${postName}`,
         { postName, patchOperations },
       );
-      const response = await this.makeRequest<any>('PATCH', endpoint, {
-        headers: {
-          'Content-Type': 'application/json-patch+json',
+      const response = await this.makeRequest<Record<string, unknown>>(
+        'PATCH',
+        endpoint,
+        {
+          headers: {
+            'Content-Type': 'application/json-patch+json',
+          },
+          data: patchOperations,
         },
-        data: patchOperations,
-      });
+      );
 
       if (response && response.status >= 200 && response.status < 300) {
         log(
@@ -516,13 +558,17 @@ export class HaloClient {
         });
         return { success: false, error: errorMsg };
       }
-    } catch (err: any) {
-      const errorMsg = `Error updating SEO meta for article ID: ${postName}: ${err.message}`;
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      const errorStack = err instanceof Error ? err.stack : undefined;
+      const errorResponse = (err as Record<string, unknown>)
+        ?.response as Record<string, unknown>;
+      const errorMsg = `Error updating SEO meta for article ID: ${postName}: ${errorMessage}`;
       log('error', 'HaloClient', errorMsg, {
         postName: postName,
-        error: err.message,
-        responseData: err.response?.data,
-        stack: err.stack,
+        error: errorMessage,
+        responseData: errorResponse?.data,
+        stack: errorStack,
       });
       return { success: false, error: errorMsg };
     }

@@ -140,21 +140,24 @@ export class SeoOptimizer {
           seoMeta: seoMeta,
         },
       );
-      logLLMSeoGeneration(`LLM generated SEO meta for ${articleId}`, seoMeta); // Log the generated SEO meta to the separate file
+      logLLMSeoGeneration(
+        `LLM generated SEO meta for ${articleId}`,
+        seoMeta as unknown as Record<string, unknown>,
+      ); // Log the generated SEO meta to the separate file
 
       // After generation, apply post-processing to enforce constraints that the LLM struggles with.
       const finalSeoMeta = this._truncateMetaDescription(seoMeta, articleId);
 
       return finalSeoMeta;
-    } catch (err: any) {
+    } catch (err: unknown) {
       log(
         'error',
         Modules.SeoOptimizer,
         `LLM optimization failed for article ID: ${articleId}:`,
         {
           articleId: articleId,
-          error: err.message,
-          stack: err.stack,
+          error: err instanceof Error ? err.message : String(err),
+          stack: err instanceof Error ? err.stack : undefined,
         },
       );
       return null;

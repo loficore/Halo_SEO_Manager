@@ -3,7 +3,7 @@ import {
   INSERT_OR_REPLACE_SETTING,
   GET_SETTING_BY_KEY,
   GET_ALL_SETTINGS,
-} from '../sql/dao/settings.sql';
+} from './settings.sql';
 
 export class SettingsTable {
   constructor(private db: Database) {}

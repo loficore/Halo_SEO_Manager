@@ -27,6 +27,12 @@ export const UPDATE_USER_MFA_SECRET = `
   WHERE id = :id
 `;
 
+export const UPDATE_USER_PASSWORD = `
+  UPDATE users
+  SET password_hash = :password_hash, updated_at = CURRENT_TIMESTAMP
+  WHERE id = :id
+`;
+
 export const UPDATE_USER_ROLE = `
   UPDATE users
   SET role = :role, updated_at = CURRENT_TIMESTAMP

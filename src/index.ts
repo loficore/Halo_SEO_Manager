@@ -30,7 +30,9 @@ import apiKeyController from './api/apiKeyController'; // apiKeyController 默�
 import { createConfigController } from './api/configController'; // 导入 ConfigController
 import { authMiddleware } from './middleware/authMiddleware'; // 导入认证中间件
 import { errorHandler } from './middleware/errorHandler'; // 导入全局错误处理中间件
-import { MelodyAuthClient } from './services/melodyAuthClient'; // 导入 MelodyAuthClient
+import { JwtService } from './services/JwtService'; // 导入 JwtService
+import { MfaService } from './services/MfaService'; // 导入 MfaService
+import { PasswordService } from './services/PasswordService'; // 导入 PasswordService
 
 import express from 'express'; // 导入 Express 框架
 
@@ -159,13 +161,16 @@ export async function setupApp() {
     /**
      * @var {AuthService} authService 认证服务实例，处理用户认证逻辑。
      */
-    const melodyAuthClient = new MelodyAuthClient(
-      process.env.MELODY_AUTH_BASE_URL || 'http://localhost:3001',
-    ); // 实例化 MelodyAuthClient
+    const jwtService = new JwtService();
+    const mfaService = new MfaService();
+    const passwordService = new PasswordService();
+    
     const authService = new AuthService(
       dbManager,
-      melodyAuthClient,
       configService,
+      jwtService,
+      mfaService,
+      passwordService
     );
     /**
      * @var {ApiKeyService} apiKeyService API Key 服务实例，管理 API 密钥。
@@ -231,10 +236,12 @@ export async function setupApp() {
       taskService,
       scheduler,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    const errorStack = err instanceof Error ? err.stack : undefined;
     log('error', Modules.App, 'SEO Manager 发生错误:', {
-      error: err.message,
-      stack: err.stack,
+      error: errorMessage,
+      stack: errorStack,
     });
     // 在测试环境中，不退出进程，而是抛出错误，让测试框架捕获
     if (process.env.NODE_ENV === 'test') {
@@ -279,10 +286,12 @@ async function main(): Promise<void> {
       await dbManager.close();
       process.exit(0);
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    const errorStack = err instanceof Error ? err.stack : undefined;
     log('error', Modules.App, 'SEO Manager 发生错误:', {
-      error: err.message,
-      stack: err.stack,
+      error: errorMessage,
+      stack: errorStack,
     });
     process.exit(1);
   }

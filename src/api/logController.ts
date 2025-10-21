@@ -9,13 +9,23 @@ import { AuthService } from '../services/AuthService'; // 导入 AuthService (�
 import { ApiKeyService } from '../services/ApiKeyService'; // 导入 ApiKeyService (用于authMiddleware)
 import { ConfigService } from '../services/ConfigService'; // 导入 ConfigService (用于authMiddleware)
 import { DatabaseManager } from '../database'; // 导入 DatabaseManager (用于authMiddleware)
-import { MelodyAuthClient } from '../services/melodyAuthClient'; // 导入 MelodyAuthClient (用于authMiddleware)
+import { JwtService } from '../services/JwtService'; // 导入 JwtService
+import { MfaService } from '../services/MfaService'; // 导入 MfaService
+import { PasswordService } from '../services/PasswordService'; // 导入 PasswordService
 
 // 依赖注入应该在主文件中完成，这里为了保持自洽性进行实例化
 const dbManager = new DatabaseManager();
-const melodyAuthClient = new MelodyAuthClient('http://localhost:3001'); // 假设MelodyAuth运行在3001端口
 const configService = new ConfigService(dbManager);
-const authService = new AuthService(dbManager, melodyAuthClient, configService);
+const jwtService = new JwtService();
+const mfaService = new MfaService();
+const passwordService = new PasswordService();
+const authService = new AuthService(
+  dbManager,
+  configService,
+  jwtService,
+  mfaService,
+  passwordService
+);
 const apiKeyService = new ApiKeyService(dbManager);
 const apiAuthMiddleware = authMiddleware(authService, apiKeyService);
 
@@ -114,10 +124,12 @@ export const createLogController = (logService: LogService): Router => {
       try {
         const logs = await logService.getLogs(getLogsRequest);
         return res.status(200).json(logs);
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
         log('error', Modules.LogController, 'Error retrieving system logs:', {
-          error: error.message,
-          stack: error.stack,
+          error: errorMessage,
+          stack: errorStack,
         });
         return res
           .status(500)

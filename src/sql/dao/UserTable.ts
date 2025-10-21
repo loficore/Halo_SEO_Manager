@@ -4,10 +4,11 @@ import {
   GET_USER_BY_USERNAME,
   GET_USER_BY_ID,
   UPDATE_USER_MFA_SECRET,
+  UPDATE_USER_PASSWORD,
   UPDATE_USER_ROLE,
   GET_ALL_USERS,
   DELETE_USER_BY_ID,
-} from '../sql/dao/users.sql';
+} from './users.sql';
 
 export class UserTable {
   constructor(private db: Database) {}
@@ -40,6 +41,10 @@ export class UserTable {
 
   async updateUserMfaSecret(id: string, mfaSecret: string) {
     await this.db.run(UPDATE_USER_MFA_SECRET, { mfa_secret: mfaSecret, id });
+  }
+
+  async updateUserPassword(id: string, passwordHash: string) {
+    await this.db.run(UPDATE_USER_PASSWORD, { password_hash: passwordHash, id });
   }
 
   async updateUserRole(id: string, role: string) {

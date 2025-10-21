@@ -28,7 +28,7 @@ export class Scheduler {
   private isProcessing = false;
   private cronJob: cron.ScheduledTask | null = null;
   private queueInterval: NodeJS.Timeout | null = null;
-  private rawPostCache = new Map<string, any>();
+  private rawPostCache = new Map<string, Record<string, unknown>>();
 
   /**
    * 中文注释：初始化调度器
@@ -134,14 +134,16 @@ export class Scheduler {
       }
       await this.dbManager.syncArticles(articles);
       log('info', 'Scheduler', 'Article synchronization with Halo completed.');
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      const errorStack = err instanceof Error ? err.stack : undefined;
       log(
         'error',
         'Scheduler',
         'Error during article synchronization with Halo:',
         {
-          error: err.message,
-          stack: err.stack,
+          error: errorMessage,
+          stack: errorStack,
         },
       );
     }
@@ -178,10 +180,12 @@ export class Scheduler {
           );
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      const errorStack = err instanceof Error ? err.stack : undefined;
       log('error', 'Scheduler', 'Error fetching articles for optimization:', {
-        error: err.message,
-        stack: err.stack,
+        error: errorMessage,
+        stack: errorStack,
       });
     }
   }
@@ -209,11 +213,11 @@ export class Scheduler {
       let status: string = 'failed';
       let errorMessage: string | null = null;
       // LLM metrics, these might be returned by seoOptimizer.optimizeArticle
-      let llmCalls: number = 0;
-      let tokenUsage: number = 0;
+      const llmCalls: number = 0;
+      const tokenUsage: number = 0;
       let durationMs: number = 0;
       let optimizationAttempts: number = 0;
-      let modelVersion: string | null = null;
+      const modelVersion: string | null = null;
 
       try {
         const startedAt = Date.now();
@@ -321,17 +325,20 @@ export class Scheduler {
             seoMeta: seoMeta,
           });
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         status = 'failed';
-        errorMessage = err.message;
+        const errorMessageObj =
+          err instanceof Error ? err.message : String(err);
+        const errorStack = err instanceof Error ? err.stack : undefined;
+        errorMessage = errorMessageObj;
         log(
           'error',
           'Scheduler',
           `Error processing article "${article.title}":`,
           {
             articleId: article.article_id,
-            error: err.message,
-            stack: err.stack,
+            error: errorMessageObj,
+            stack: errorStack,
           },
         );
       } finally {
@@ -341,7 +348,9 @@ export class Scheduler {
           {
             title: seoMeta?.metaTitle,
             description: seoMeta?.metaDescription,
-            keywords: seoMeta?.keywords,
+            keywords: seoMeta?.keywords
+              ? seoMeta.keywords.join(', ')
+              : undefined,
             slug: seoMeta?.slug,
           },
           status,

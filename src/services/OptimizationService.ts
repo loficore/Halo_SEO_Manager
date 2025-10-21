@@ -1,8 +1,8 @@
 import { DatabaseManager } from '../database';
-import { HaloClient, ArticleData } from '../haloClient';
+import { HaloClient } from '../haloClient';
 import { SeoOptimizer } from '../seoOptimizer';
 import { SeoValidator } from '../seoValidator';
-import { SeoPublisher } from '../seoPublisher'; // Assuming SeoPublisher exists
+import { SeoPublisher } from '../seoPublisher';
 import { TaskStatus } from '../types/task';
 import {
   SeoRun,
@@ -10,8 +10,8 @@ import {
   SeoRunResponse,
 } from '../types/optimization';
 import { log, Modules } from '../logger';
-import { SystemSettings, LlmConfig, OptimizationParams } from '../types/config';
-import { ConfigService } from './ConfigService'; // Assuming ConfigService is available
+import { OptimizationParams } from '../types/config';
+import { ConfigService } from './ConfigService';
 import { SeoMeta } from '../types/seo';
 import crypto from 'crypto';
 
@@ -77,15 +77,16 @@ export class OptimizationService {
       `Starting optimization for article ID: ${articleId} by user: ${userId}.`,
     );
 
-    let seoRunId = crypto.randomUUID();
-    let startTime = new Date();
+    const seoRunId = crypto.randomUUID();
+    const startTime = new Date();
     let status: TaskStatus = TaskStatus.RUNNING;
     let errorMessage: string | undefined;
     let report: SeoOptimizationReport | undefined;
-    let retryCount = 0;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const retryCount = 0;
 
     // Create initial SEO run record
-    let seoRun: SeoRun = {
+    const seoRun: SeoRun = {
       id: seoRunId,
       userId,
       articleId,
@@ -105,7 +106,9 @@ export class OptimizationService {
         throw new Error(`Article with ID ${articleId} not found in Halo CMS.`);
       }
 
-      const articleData = await this.haloClient.extractArticleData(rawPostData);
+      const articleData = await this.haloClient.extractArticleData(
+        rawPostData as any,
+      );
       if (!articleData) {
         throw new Error(
           `Could not extract article data for ID ${articleId}. It might be deleted or unpublished.`,
@@ -113,14 +116,14 @@ export class OptimizationService {
       }
 
       // 使用新的 DAO 层初始化数据库中的 SEO 运行记录
-      seoRun.status = TaskStatus.RUNNING;
+      const runningStatus = TaskStatus.RUNNING;
       await this.dbManager.seoRuns.createSeoRun({
         id: seoRun.id,
         user_id: seoRun.userId,
         article_id: seoRun.articleId,
         llm_model: seoRun.llmModel,
         optimization_params: JSON.stringify(seoRun.optimizationParams),
-        status: seoRun.status,
+        status: runningStatus,
         start_time: seoRun.startTime,
         retry_count: seoRun.retryCount,
       });
@@ -129,10 +132,10 @@ export class OptimizationService {
       const maxAttempts = 3;
       let previousSeoMeta: SeoMeta | null = null;
       let lastErrors: string[] = [];
-      let optimizationAttempts = 0;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const optimizationAttempts = 0;
 
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        optimizationAttempts = attempt;
         // 1. Optimize using LLM
         const optimizationResult: SeoMeta | null =
           await this.seoOptimizer.optimizeArticle(
@@ -230,9 +233,12 @@ export class OptimizationService {
         errorMessage =
           errorMessage || 'Optimization process did not reach a final status.';
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       status = TaskStatus.FAILED;
-      errorMessage = error.message;
+      const errorMessageObj =
+        error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      errorMessage = errorMessageObj;
       log(
         'error',
         Modules.OptimizationService,
@@ -240,11 +246,12 @@ export class OptimizationService {
         {
           userId,
           articleId,
-          error: error.message,
-          stack: error.stack,
+          error: errorMessageObj,
+          stack: errorStack,
         },
       );
     } finally {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const endTime = new Date();
       // 使用新的 DAO 层更新 SEO 运行记录的最终状态和报告
       await this.dbManager.seoRuns.updateSeoRunStatusAndReport(
@@ -306,15 +313,18 @@ export class OptimizationService {
         { userId, count: runs.length },
       );
       return runs;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
       log(
         'error',
         Modules.OptimizationService,
         `Failed to retrieve optimization runs for user ID ${userId}:`,
         {
           userId,
-          error: error.message,
-          stack: error.stack,
+          error: errorMessage,
+          stack: errorStack,
         },
       );
       throw error;
@@ -337,14 +347,17 @@ export class OptimizationService {
         { count: allSeoRuns.length },
       );
       return allSeoRuns;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
       log(
         'error',
         Modules.OptimizationService,
         'Failed to retrieve all optimization runs:',
         {
-          error: error.message,
-          stack: error.stack,
+          error: errorMessage,
+          stack: errorStack,
         },
       );
       throw error;
@@ -383,15 +396,18 @@ export class OptimizationService {
         );
       }
       return run;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
       log(
         'error',
         Modules.OptimizationService,
         `Failed to retrieve optimization report for ID ${seoRunId}:`,
         {
           seoRunId,
-          error: error.message,
-          stack: error.stack,
+          error: errorMessage,
+          stack: errorStack,
         },
       );
       throw error;

@@ -9,13 +9,13 @@
  */
 export class HttpError extends Error {
   public statusCode: number;
-  public details?: any;
+  public details?: Record<string, unknown>;
   public isOperational: boolean; // 标识操作性错误
 
   constructor(
     statusCode: number,
     message: string,
-    details?: any,
+    details?: Record<string, unknown>,
     isOperational: boolean = true,
   ) {
     super(message);
@@ -33,7 +33,11 @@ export class HttpError extends Error {
  * @description 通用 API 错误类，允许自定义状态码。
  */
 export class ApiError extends HttpError {
-  constructor(statusCode: number, message: string, details?: any) {
+  constructor(
+    statusCode: number,
+    message: string,
+    details?: Record<string, unknown>,
+  ) {
     super(statusCode, message, details);
     this.name = this.constructor.name;
     Object.setPrototypeOf(this, ApiError.prototype);
@@ -46,7 +50,10 @@ export class ApiError extends HttpError {
  * @description 认证失败错误 (401 Unauthorized)。
  */
 export class UnauthorizedError extends HttpError {
-  constructor(message: string = '认证失败或未授权', details?: any) {
+  constructor(
+    message: string = '认证失败或未授权',
+    details?: Record<string, unknown>,
+  ) {
     super(401, message, details);
     this.name = this.constructor.name;
     Object.setPrototypeOf(this, UnauthorizedError.prototype);
@@ -59,7 +66,10 @@ export class UnauthorizedError extends HttpError {
  * @description 权限不足错误 (403 Forbidden)。
  */
 export class ForbiddenError extends HttpError {
-  constructor(message: string = '无权访问此资源', details?: any) {
+  constructor(
+    message: string = '无权访问此资源',
+    details?: Record<string, unknown>,
+  ) {
     super(403, message, details);
     this.name = this.constructor.name;
     Object.setPrototypeOf(this, ForbiddenError.prototype);
@@ -72,7 +82,10 @@ export class ForbiddenError extends HttpError {
  * @description 资源未找到错误 (404 Not Found)。
  */
 export class NotFoundError extends HttpError {
-  constructor(message: string = '资源未找到', details?: any) {
+  constructor(
+    message: string = '资源未找到',
+    details?: Record<string, unknown>,
+  ) {
     super(404, message, details);
     this.name = this.constructor.name;
     Object.setPrototypeOf(this, NotFoundError.prototype);
@@ -85,7 +98,10 @@ export class NotFoundError extends HttpError {
  * @description 请求数据校验失败错误 (400 Bad Request)。
  */
 export class ValidationError extends HttpError {
-  constructor(message: string = '请求数据校验失败', details?: any) {
+  constructor(
+    message: string = '请求数据校验失败',
+    details?: Record<string, unknown>,
+  ) {
     super(400, message, details);
     this.name = this.constructor.name;
     Object.setPrototypeOf(this, ValidationError.prototype);
@@ -98,7 +114,10 @@ export class ValidationError extends HttpError {
  * @description 服务器内部错误 (500 Internal Server Error)。
  */
 export class InternalServerError extends HttpError {
-  constructor(message: string = '服务器内部错误', details?: any) {
+  constructor(
+    message: string = '服务器内部错误',
+    details?: Record<string, unknown>,
+  ) {
     super(500, message, details);
     this.name = this.constructor.name;
     Object.setPrototypeOf(this, InternalServerError.prototype);

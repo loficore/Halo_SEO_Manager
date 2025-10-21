@@ -8,12 +8,13 @@ import { OptimizationParams } from './config';
 /**
  * 任务状态枚举。
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export enum TaskStatus {
-  PENDING = 'PENDING',
-  RUNNING = 'RUNNING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED',
+  PENDING = 'PENDING', // eslint-disable-line @typescript-eslint/no-unused-vars
+  RUNNING = 'RUNNING', // eslint-disable-line @typescript-eslint/no-unused-vars
+  COMPLETED = 'COMPLETED', // eslint-disable-line @typescript-eslint/no-unused-vars
+  FAILED = 'FAILED', // eslint-disable-line @typescript-eslint/no-unused-vars
+  CANCELLED = 'CANCELLED', // eslint-disable-line @typescript-eslint/no-unused-vars
 }
 
 /**

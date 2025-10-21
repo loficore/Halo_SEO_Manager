@@ -5,7 +5,7 @@ import {
   GET_SEO_RUNS_BY_USER_ID,
   UPDATE_SEO_RUN_STATUS_AND_REPORT,
   GET_ALL_SEO_RUNS,
-} from './seoRuns.sql.js';
+} from './seoRuns.sql';
 
 export class SeoRunTable {
   constructor(private db: Database) {}

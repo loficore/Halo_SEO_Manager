@@ -18,7 +18,11 @@ export const authMiddleware = (
   authService: AuthService,
   apiKeyService: ApiKeyService,
 ) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void | Response> => {
     const authHeader = req.headers.authorization;
     const apiKeyHeader = req.headers['x-api-key'] as string;
 
@@ -29,41 +33,49 @@ export const authMiddleware = (
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
       try {
-        // TODO: 这里需要一个实际的 JWT 验证逻辑。
-        // AuthService 当前通过 MelodyAuthClient 处理认证并返回 accessToken，
-        // 但缺少一个直接验证 JWT token 的方法。
-        // 暂时模拟一个用户，后续需与 MelodyAuthClient 的 token 验证机制集成。
-        // 假设通过某种方式从 token 解析出 userId 和 userRole
-        // 例如：const decodedToken = await authService.verifyJwt(token);
-        // userId = decodedToken.userId;
-        // userRole = decodedToken.role;
+        // 使用新的 JwtService 验证令牌
+        const verificationResult = authService.verifyAccessToken(token);
+        
+        if (!verificationResult.valid) {
+          log('warn', Modules.AuthMiddleware, `JWT token validation failed: ${verificationResult.error}`, {
+            tokenPrefix: token.substring(0, Math.min(token.length, 10)),
+            errorCode: verificationResult.errorCode,
+          });
+          
+          // 根据错误类型返回不同的状态码
+          const statusCode = verificationResult.errorCode === 'TOKEN_EXPIRED' ? 401 : 403;
+          return res.status(statusCode).json({
+            message: `Unauthorized: ${verificationResult.error}`,
+            errorCode: verificationResult.errorCode
+          });
+        }
 
-        // 临时模拟认证成功，以便后续开发
-        log(
-          'warn',
-          Modules.AuthMiddleware,
-          'JWT token validation is simulated. Implement actual JWT verification.',
-          { tokenPrefix: token.substring(0, Math.min(token.length, 10)) },
-        );
-
-        const userProfile = await authService.getUserProfileFromToken(token);
-        if (userProfile) {
-          userId = userProfile.userId;
-          userRole = userProfile.roles[0] as UserRole;
-        } else {
-          log('warn', Modules.AuthMiddleware, 'Invalid or expired JWT token.', {
+        // 从验证成功的令牌中提取用户信息
+        const payload = verificationResult.payload;
+        if (payload) {
+          userId = payload.userId;
+          userRole = payload.role as UserRole;
+          
+          log('info', Modules.AuthMiddleware, 'JWT token validated successfully', {
+            userId,
+            userRole,
             tokenPrefix: token.substring(0, Math.min(token.length, 10)),
           });
-          return res
-            .status(401)
-            .json({ message: 'Unauthorized: Invalid or expired token.' });
+        } else {
+          log('warn', Modules.AuthMiddleware, 'Valid JWT token but no payload found', {
+            tokenPrefix: token.substring(0, Math.min(token.length, 10)),
+          });
+          return res.status(401).json({ message: 'Unauthorized: Invalid token payload.' });
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
         log(
           'error',
           Modules.AuthMiddleware,
           'Error during JWT token validation:',
-          { error: error.message, stack: error.stack },
+          { error: errorMessage, stack: errorStack },
         );
         return res
           .status(401)
@@ -98,12 +110,15 @@ export const authMiddleware = (
             .status(401)
             .json({ message: 'Unauthorized: Invalid API Key.' });
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
         log(
           'error',
           Modules.AuthMiddleware,
           'Error during API Key validation:',
-          { error: error.message, stack: error.stack },
+          { error: errorMessage, stack: errorStack },
         );
         return res.status(500).json({
           message: 'Internal server error during API Key validation.',
@@ -112,8 +127,27 @@ export const authMiddleware = (
     }
 
     if (userId && userRole) {
-      (req as AuthenticatedRequest).user = { id: userId, role: userRole };
-      next();
+      // 需要获取用户名和邮箱信息以满足新的类型定义
+      try {
+        const user = await authService.getUserById(userId);
+        (req as AuthenticatedRequest).user = {
+          id: userId,
+          role: userRole,
+          username: user?.username || '',
+          email: user?.email
+        };
+        next();
+      } catch (error) {
+        log(
+          'error',
+          Modules.AuthMiddleware,
+          'Error fetching user details for authentication context:',
+          { userId, error: error instanceof Error ? error.message : String(error) }
+        );
+        return res.status(500).json({
+          message: 'Internal server error during authentication.',
+        });
+      }
     } else {
       log(
         'warn',

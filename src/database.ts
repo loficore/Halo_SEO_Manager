@@ -10,6 +10,11 @@ import fs from 'fs'; // Import fs module for file system operations
 import { log } from './logger';
 import * as BetterSqlite3 from 'better-sqlite3'; // Import better-sqlite3 for backup functionality
 import { INITIAL_SCHEMA } from './sql/migrations/V1__initial_schema.sql';
+import {
+  REFRESH_TOKENS_SCHEMA,
+  MIGRATION_VERSION,
+} from './sql/migrations/V2__add_refresh_tokens.sql';
+import { ArticleData } from './haloClient'; // Import ArticleData type
 
 // Import DAO classes
 import { ArticleTable } from './sql/dao/ArticleTable';
@@ -18,6 +23,7 @@ import { ApiKeyTable } from './sql/dao/ApiKeyTable';
 import { SettingsTable } from './sql/dao/SettingsTable';
 import { ScheduledTaskTable } from './sql/dao/ScheduledTaskTable';
 import { SeoRunTable } from './sql/dao/SeoRunTable';
+import { RefreshTokenTable } from './sql/dao/RefreshTokenTable';
 
 /**
  * @description 数据库管理类。负责SQLite数据库的初始化、迁移、事务编排和跨表逻辑。具体的表操作委托给相应的 DAO 类。
@@ -34,6 +40,7 @@ export class DatabaseManager {
   public settings: SettingsTable;
   public scheduledTasks: ScheduledTaskTable;
   public seoRuns: SeoRunTable;
+  public refreshTokens: RefreshTokenTable;
 
   /**
    * 中文注释：初始化数据库管理器
@@ -43,12 +50,13 @@ export class DatabaseManager {
   constructor(dbPath: string = 'seo_manager.db') {
     this.dbPath = dbPath;
     // DAO instances will be initialized after the database connection is established
-    this.articles = null as any;
-    this.users = null as any;
-    this.apiKeys = null as any;
-    this.settings = null as any;
-    this.scheduledTasks = null as any;
-    this.seoRuns = null as any;
+    this.articles = null as unknown as ArticleTable;
+    this.users = null as unknown as UserTable;
+    this.apiKeys = null as unknown as ApiKeyTable;
+    this.settings = null as unknown as SettingsTable;
+    this.scheduledTasks = null as unknown as ScheduledTaskTable;
+    this.seoRuns = null as unknown as SeoRunTable;
+    this.refreshTokens = null as unknown as RefreshTokenTable;
   }
 
   /**
@@ -75,12 +83,16 @@ export class DatabaseManager {
       this.settings = new SettingsTable(this.db);
       this.scheduledTasks = new ScheduledTaskTable(this.db);
       this.seoRuns = new SeoRunTable(this.db);
+      this.refreshTokens = new RefreshTokenTable(this.db);
 
       log('info', 'Database', 'Database initialized successfully.');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
       log('error', 'Database', 'Error initializing database:', {
-        error: error.message,
-        stack: error.stack,
+        error: errorMessage,
+        stack: errorStack,
       });
       throw error;
     }
@@ -100,27 +112,37 @@ export class DatabaseManager {
       );
     `);
 
-    // For now, we only have one migration: V1__initial_schema
-    // In the future, we can scan the migrations directory and apply them in order.
-    const migrationVersion = 'V1__initial_schema';
-    const result = await this.db!.get(
-      'SELECT version FROM schema_migrations WHERE version = ?',
-      [migrationVersion],
-    );
+    // Run migrations in order
+    const migrations = [
+      { version: 'V1__initial_schema', sql: INITIAL_SCHEMA },
+      { version: MIGRATION_VERSION, sql: REFRESH_TOKENS_SCHEMA },
+    ];
 
-    if (!result) {
-      log('info', 'Database', `Applying migration: ${migrationVersion}`);
-      await this.db!.exec(INITIAL_SCHEMA);
-      await this.db!.run('INSERT INTO schema_migrations (version) VALUES (?)', [
-        migrationVersion,
-      ]);
-      log(
-        'info',
-        'Database',
-        `Migration ${migrationVersion} applied successfully.`,
+    for (const migration of migrations) {
+      const result = await this.db!.get(
+        'SELECT version FROM schema_migrations WHERE version = ?',
+        [migration.version],
       );
-    } else {
-      log('info', 'Database', `Migration ${migrationVersion} already applied.`);
+
+      if (!result) {
+        log('info', 'Database', `Applying migration: ${migration.version}`);
+        await this.db!.exec(migration.sql);
+        await this.db!.run(
+          'INSERT INTO schema_migrations (version) VALUES (?)',
+          [migration.version],
+        );
+        log(
+          'info',
+          'Database',
+          `Migration ${migration.version} applied successfully.`,
+        );
+      } else {
+        log(
+          'info',
+          'Database',
+          `Migration ${migration.version} already applied.`,
+        );
+      }
     }
   }
 
@@ -194,7 +216,8 @@ export class DatabaseManager {
       throw new Error('Database not initialized');
     }
     // BetterSqlite3 的 backup 方法需要直接的数据库对象，而不是 sqlite 模块封装的
-    const nativeDb = (this.db as any)._db as BetterSqlite3.Database;
+    const nativeDb = (this.db as unknown as { _db: BetterSqlite3.Database })
+      ._db;
     if (!nativeDb) {
       throw new Error(
         'Native SQLite database object not available for backup.',
@@ -256,14 +279,121 @@ export class DatabaseManager {
             reject(err);
           });
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
       log('error', 'Database', `Failed to backup database to ${backupPath}:`, {
         backupPath,
-        error: error.message,
-        stack: error.stack,
+        error: errorMessage,
+        stack: errorStack,
       });
       throw error;
     }
+  }
+
+  /**
+   * @description 同步文章数据到数据库
+   * @description English: Sync article data to database
+   * @param {ArticleData[]} articles - 文章数据数组 / Array of article data
+   * @returns {Promise<void>}
+   */
+  async syncArticles(articles: ArticleData[]): Promise<void> {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
+    await this.runInTransaction(async () => {
+      for (const article of articles) {
+        await this.articles.saveArticle(article);
+      }
+    });
+
+    log('info', 'Database', `Synced ${articles.length} articles to database.`);
+  }
+
+  /**
+   * @description 获取需要优化的文章
+   * @description English: Get articles that need optimization
+   * @param {boolean} forceReoptimize - 是否强制重新优化 / Whether to force re-optimization
+   * @param {number} minDays - 最小天数 / Minimum days
+   * @returns {Promise<ArticleData[]>}
+   */
+  async getArticlesForOptimization(
+    forceReoptimize = false,
+    minDays = 7,
+  ): Promise<ArticleData[]> {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
+    return await this.articles.getArticlesForOptimization(
+      forceReoptimize,
+      minDays,
+    );
+  }
+
+  /**
+   * @description 记录SEO运行结果
+   * @description English: Record SEO run result
+   * @param {string} articleId - 文章ID / Article ID
+   * @param {object} seoData - SEO数据 / SEO data
+   * @param {string} status - 状态 / Status
+   * @param {string|null} errorMessage - 错误信息 / Error message
+   * @param {number} llmCalls - LLM调用次数 / LLM call count
+   * @param {number} tokenUsage - Token使用量 / Token usage
+   * @param {number} durationMs - 持续时间（毫秒） / Duration in milliseconds
+   * @param {number} optimizationAttempts - 优化尝试次数 / Optimization attempt count
+   * @param {string|null} modelVersion - 模型版本 / Model version
+   * @returns {Promise<void>}
+   */
+  async recordSeoRun(
+    articleId: string,
+    seoData: {
+      title?: string;
+      description?: string;
+      keywords?: string;
+      slug?: string;
+    },
+    status: string,
+    errorMessage: string | null,
+    llmCalls: number,
+    tokenUsage: number,
+    durationMs: number,
+    optimizationAttempts: number,
+    modelVersion: string | null,
+  ): Promise<void> {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
+    const seoRunId = `seo_run_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    await this.seoRuns.createSeoRun({
+      id: seoRunId,
+      user_id: 'system', // 系统生成的任务
+      article_id: articleId,
+      llm_model: modelVersion || 'unknown',
+      optimization_params: JSON.stringify({
+        llmCalls,
+        tokenUsage,
+        durationMs,
+        optimizationAttempts,
+        seoData,
+      }),
+      status,
+      start_time: new Date(Date.now() - durationMs),
+      end_time: new Date(),
+      report: status === 'success' ? JSON.stringify(seoData) : undefined,
+      error_message: errorMessage || undefined,
+      retry_count: optimizationAttempts - 1,
+    });
+
+    log(
+      'info',
+      'Database',
+      `Recorded SEO run for article ${articleId} with status: ${status}`,
+    );
   }
 }
 

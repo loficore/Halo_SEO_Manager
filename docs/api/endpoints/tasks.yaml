@@ -1,0 +1,461 @@
+openapi: 3.0.3
+info:
+  title: 任务管理 API 端点
+  description: SEO 优化任务调度和管理相关的 API 端点
+  version: 1.0.0
+
+paths:
+  /api/tasks:
+    get:
+      tags:
+        - 任务管理
+      summary: 获取任务列表
+      description: 获取当前用户的任务列表，支持分页和过滤
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          description: 按状态过滤
+          schema:
+            $ref: '../schemas/task.json#/components/schemas/TaskStatus'
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          description: 每页大小
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: 任务列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tasks:
+                    type: array
+                    items:
+                      $ref: '../schemas/task.json#/components/schemas/TaskResponse'
+                  totalCount:
+                    type: integer
+                    description: 总任务数
+                  currentPage:
+                    type: integer
+                    description: 当前页码
+                  pageSize:
+                    type: integer
+                    description: 每页大小
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+    post:
+      tags:
+        - 任务管理
+      summary: 创建新任务
+      description: 创建新的 SEO 优化任务
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/task.json#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: 任务创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/task.json#/components/schemas/TaskResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+  /api/tasks/{taskId}:
+    get:
+      tags:
+        - 任务管理
+      summary: 获取任务详情
+      description: 获取指定任务的详细信息
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: 任务 ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 任务详情
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/task.json#/components/schemas/TaskResponse'
+        '404':
+          description: 任务不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+    put:
+      tags:
+        - 任务管理
+      summary: 更新任务
+      description: 更新指定任务的配置
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: 任务 ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/task.json#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: 任务更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/task.json#/components/schemas/TaskResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '404':
+          description: 任务不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+    delete:
+      tags:
+        - 任务管理
+      summary: 删除任务
+      description: 删除指定的任务
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: 任务 ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 任务删除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "任务删除成功"
+        '404':
+          description: 任务不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+  /api/tasks/{taskId}/start:
+    post:
+      tags:
+        - 任务管理
+      summary: 启动任务
+      description: 手动启动指定的任务
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: 任务 ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 任务启动成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "任务启动成功"
+                  task:
+                    $ref: '../schemas/task.json#/components/schemas/TaskResponse'
+        '400':
+          description: 任务状态不允许启动
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "任务已在运行中"
+        '404':
+          description: 任务不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+  /api/tasks/{taskId}/stop:
+    post:
+      tags:
+        - 任务管理
+      summary: 停止任务
+      description: 停止正在运行的任务
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: 任务 ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 任务停止成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "任务停止成功"
+                  task:
+                    $ref: '../schemas/task.json#/components/schemas/TaskResponse'
+        '400':
+          description: 任务状态不允许停止
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "任务未在运行中"
+        '404':
+          description: 任务不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+  /api/tasks/{taskId}/schedule:
+    post:
+      tags:
+        - 任务管理
+      summary: 重新调度任务
+      description: 更新任务的调度时间表
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: 任务 ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - scheduleCron
+              properties:
+                scheduleCron:
+                  type: string
+                  description: "Cron 表达式"
+                  example: "0 0 * * *"
+      responses:
+        '200':
+          description: 任务调度更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "任务调度更新成功"
+                  task:
+                    $ref: '../schemas/task.json#/components/schemas/TaskResponse'
+        '400':
+          description: 无效的 Cron 表达式
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "无效的 Cron 表达式"
+        '404':
+          description: 任务不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

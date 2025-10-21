@@ -1,0 +1,214 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Optimization Schema Collection",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "SeoOptimizationReport": {
+        "type": "object",
+        "description": "SEO 优化报告接口",
+        "required": ["metaTitle", "metaDescription", "keywords", "slug", "originalContentHash", "optimizedContentHash"],
+        "properties": {
+          "metaTitle": {
+            "type": "string",
+            "description": "优化后的元标题"
+          },
+          "metaDescription": {
+            "type": "string",
+            "description": "优化后的元描述"
+          },
+          "keywords": {
+            "type": "array",
+            "description": "优化后的关键词列表",
+            "items": {
+              "type": "string"
+            }
+          },
+          "slug": {
+            "type": "string",
+            "description": "优化后的URL slug"
+          },
+          "originalContentHash": {
+            "type": "string",
+            "description": "原始文章内容的哈希，用于检测内容是否变更"
+          },
+          "optimizedContentHash": {
+            "type": "string",
+            "description": "优化后文章内容的哈希"
+          },
+          "validationFeedback": {
+            "type": "string",
+            "description": "验证器提供的反馈"
+          }
+        }
+      },
+      "SeoRun": {
+        "type": "object",
+        "description": "SEO 优化运行记录接口",
+        "required": ["id", "userId", "articleId", "llmModel", "optimizationParams", "status", "startTime", "retryCount", "createdAt", "updatedAt"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "运行记录ID",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "description": "用户ID",
+            "format": "uuid"
+          },
+          "articleId": {
+            "type": "string",
+            "description": "Halo 文章 ID"
+          },
+          "llmModel": {
+            "type": "string",
+            "description": "用于优化的 LLM 模型",
+            "example": "gpt-3.5-turbo"
+          },
+          "optimizationParams": {
+            "$ref": "#/components/schemas/OptimizationParams"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus"
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "开始时间"
+          },
+          "endTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "结束时间"
+          },
+          "report": {
+            "$ref": "#/components/schemas/SeoOptimizationReport"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "如果失败，记录错误信息"
+          },
+          "retryCount": {
+            "type": "integer",
+            "description": "重试次数",
+            "minimum": 0
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "创建时间"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "更新时间"
+          }
+        }
+      },
+      "SeoRunResponse": {
+        "type": "object",
+        "description": "优化运行响应 DTO 接口",
+        "required": ["id", "userId", "articleId", "llmModel", "optimizationParams", "status", "startTime", "retryCount", "createdAt", "updatedAt"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "运行记录ID",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "description": "用户ID",
+            "format": "uuid"
+          },
+          "articleId": {
+            "type": "string",
+            "description": "Halo 文章 ID"
+          },
+          "llmModel": {
+            "type": "string",
+            "description": "用于优化的 LLM 模型",
+            "example": "gpt-3.5-turbo"
+          },
+          "optimizationParams": {
+            "$ref": "#/components/schemas/OptimizationParams"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus"
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "开始时间"
+          },
+          "endTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "结束时间"
+          },
+          "report": {
+            "$ref": "#/components/schemas/SeoOptimizationReport"
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "错误信息"
+          },
+          "retryCount": {
+            "type": "integer",
+            "description": "重试次数",
+            "minimum": 0
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "创建时间"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "更新时间"
+          }
+        }
+      },
+      "TaskStatus": {
+        "type": "string",
+        "description": "任务状态枚举",
+        "enum": ["PENDING", "RUNNING", "COMPLETED", "FAILED", "CANCELLED"]
+      },
+      "OptimizationParams": {
+        "type": "object",
+        "description": "SEO 优化参数接口",
+        "required": ["minContentLength", "maxContentLength", "minDaysSinceLastOptimization", "forceReoptimize"],
+        "properties": {
+          "minContentLength": {
+            "type": "integer",
+            "description": "最小内容长度"
+          },
+          "maxContentLength": {
+            "type": "integer",
+            "description": "最大内容长度"
+          },
+          "minDaysSinceLastOptimization": {
+            "type": "integer",
+            "description": "距离上次优化的最小天数"
+          },
+          "forceReoptimize": {
+            "type": "boolean",
+            "description": "是否强制重新优化"
+          },
+          "metaDescriptionLength": {
+            "type": "integer",
+            "description": "允许 LLM 生成的 metaDescription 长度 (例如：160)"
+          },
+          "keywordsCount": {
+            "type": "integer",
+            "description": "允许 LLM 生成的关键词数量 (例如：3)"
+          }
+        }
+      }
+    }
+  }
+}

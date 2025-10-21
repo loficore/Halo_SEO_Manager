@@ -1,0 +1,410 @@
+openapi: 3.0.3
+info:
+  title: API Key 管理 API 端点
+  description: API Key 创建、管理和使用相关的 API 端点
+  version: 1.0.0
+
+paths:
+  /api/api-keys:
+    get:
+      tags:
+        - API Key 管理
+      summary: 获取 API Key 列表
+      description: 获取当前用户的 API Key 列表
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: 按 API Key 类型过滤
+          schema:
+            $ref: '../schemas/common.json#/components/schemas/ApiKeyType'
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          description: 每页大小
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: API Key 列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  apiKeys:
+                    type: array
+                    items:
+                      $ref: '../schemas/common.json#/components/schemas/ApiKeyResponse'
+                  totalCount:
+                    type: integer
+                    description: 总 API Key 数
+                  currentPage:
+                    type: integer
+                    description: 当前页码
+                  pageSize:
+                    type: integer
+                    description: 每页大小
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+    post:
+      tags:
+        - API Key 管理
+      summary: 创建新的 API Key
+      description: 为当前用户创建新的 API Key
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.json#/components/schemas/CreateApiKeyRequest'
+      responses:
+        '201':
+          description: API Key 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/common.json#/components/schemas/ApiKeyResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+  /api/api-keys/{keyId}:
+    get:
+      tags:
+        - API Key 管理
+      summary: 获取 API Key 详情
+      description: 获取指定 API Key 的详细信息
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          description: API Key ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: API Key 详情
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/common.json#/components/schemas/ApiKeyResponse'
+        '404':
+          description: API Key 不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+    put:
+      tags:
+        - API Key 管理
+      summary: 更新 API Key
+      description: 更新指定 API Key 的信息
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          description: API Key ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.json#/components/schemas/UpdateApiKeyRequest'
+      responses:
+        '200':
+          description: API Key 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/common.json#/components/schemas/ApiKeyResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '404':
+          description: API Key 不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+    delete:
+      tags:
+        - API Key 管理
+      summary: 删除 API Key
+      description: 删除指定的 API Key
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          description: API Key ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: API Key 删除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "API Key 删除成功"
+        '404':
+          description: API Key 不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+  /api/api-keys/{keyId}/regenerate:
+    post:
+      tags:
+        - API Key 管理
+      summary: 重新生成 API Key
+      description: 重新生成指定 API Key 的值，保留其他配置
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          description: API Key ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: API Key 重新生成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "API Key 重新生成成功"
+                  apiKey:
+                    $ref: '../schemas/common.json#/components/schemas/ApiKeyResponse'
+                  newKey:
+                    type: string
+                    description: "新的 API Key 值（仅在生成时返回一次）"
+        '404':
+          description: API Key 不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+  /api/api-keys/{keyId}/toggle:
+    post:
+      tags:
+        - API Key 管理
+      summary: 启用/禁用 API Key
+      description: 切换指定 API Key 的启用状态
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          description: API Key ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                  description: "是否启用 API Key"
+                  example: true
+      responses:
+        '200':
+          description: API Key 状态更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "API Key 状态更新成功"
+                  apiKey:
+                    $ref: '../schemas/common.json#/components/schemas/ApiKeyResponse'
+        '404':
+          description: API Key 不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+  /api/api-keys/types:
+    get:
+      tags:
+        - API Key 管理
+      summary: 获取 API Key 类型列表
+      description: 获取所有可用的 API Key 类型
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: API Key 类型列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  types:
+                    type: array
+                    items:
+                      $ref: '../schemas/common.json#/components/schemas/ApiKeyType'
+                    description: "可用的 API Key 类型"
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

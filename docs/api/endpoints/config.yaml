@@ -1,0 +1,416 @@
+openapi: 3.0.3
+info:
+  title: 配置管理 API 端点
+  description: 系统配置、初始化和设置管理相关的 API 端点
+  version: 1.0.0
+
+paths:
+  /api/config/status:
+    get:
+      tags:
+        - 配置管理
+      summary: 获取系统状态
+      description: 获取系统的初始化和配置状态
+      responses:
+        '200':
+          description: 系统状态
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/config.json#/components/schemas/SystemStatus'
+
+  /api/config/settings:
+    get:
+      tags:
+        - 配置管理
+      summary: 获取系统设置
+      description: 获取完整的系统配置设置
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 系统设置
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/config.json#/components/schemas/SystemSettings'
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "无效的认证令牌"
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "需要管理员权限"
+
+    put:
+      tags:
+        - 配置管理
+      summary: 更新系统设置
+      description: 更新系统配置设置
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/config.json#/components/schemas/UpdateSystemSettingsRequest'
+      responses:
+        '200':
+          description: 设置更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/config.json#/components/schemas/SystemSettings'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "请求参数不完整"
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "无效的认证令牌"
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "需要管理员权限"
+
+  /api/config/initialize:
+    post:
+      tags:
+        - 系统初始化
+      summary: 初始化系统
+      description: 首次初始化系统，创建管理员账户和基本配置
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/config.json#/components/schemas/InitializeSystemRequest'
+      responses:
+        '201':
+          description: 系统初始化成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "系统初始化成功"
+                  adminUser:
+                    $ref: '../schemas/user.json#/components/schemas/UserResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "请求参数不完整"
+        '409':
+          description: 系统已初始化
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "系统已经初始化"
+
+  /api/config/smtp:
+    get:
+      tags:
+        - 配置管理
+      summary: 获取 SMTP 配置
+      description: 获取 SMTP 邮件服务配置
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: SMTP 配置
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/config.json#/components/schemas/SmtpConfig'
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+    put:
+      tags:
+        - 配置管理
+      summary: 更新 SMTP 配置
+      description: 更新 SMTP 邮件服务配置
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/config.json#/components/schemas/SmtpConfig'
+      responses:
+        '200':
+          description: SMTP 配置更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/config.json#/components/schemas/SmtpConfig'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+  /api/config/smtp/test:
+    post:
+      tags:
+        - 配置管理
+      summary: 测试 SMTP 配置
+      description: 发送测试邮件以验证 SMTP 配置是否正确
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - toEmail
+              properties:
+                toEmail:
+                  type: string
+                  format: email
+                  description: "测试邮件接收地址"
+                  example: "test@example.com"
+      responses:
+        '200':
+          description: 测试邮件发送成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "测试邮件发送成功"
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '500':
+          description: SMTP 配置错误或邮件发送失败
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "SMTP连接失败"
+
+  /api/config/llm:
+    get:
+      tags:
+        - 配置管理
+      summary: 获取 LLM 配置
+      description: 获取大型语言模型配置
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: LLM 配置
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/config.json#/components/schemas/LlmConfig'
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+    put:
+      tags:
+        - 配置管理
+      summary: 更新 LLM 配置
+      description: 更新大型语言模型配置
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/config.json#/components/schemas/LlmConfig'
+      responses:
+        '200':
+          description: LLM 配置更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/config.json#/components/schemas/LlmConfig'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

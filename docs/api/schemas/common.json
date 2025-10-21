@@ -1,0 +1,278 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Common Schema Collection",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "ApiKeyType": {
+        "type": "string",
+        "description": "API Key 类型枚举",
+        "enum": ["LLM", "HALO", "OTHER"]
+      },
+      "CreateApiKeyRequest": {
+        "type": "object",
+        "description": "创建 API Key 请求 DTO 接口",
+        "required": ["name", "key", "type", "userId"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "API Key 名称"
+          },
+          "key": {
+            "type": "string",
+            "description": "原始 API Key"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ApiKeyType"
+          },
+          "userId": {
+            "type": "string",
+            "description": "关联的用户 ID",
+            "format": "uuid"
+          }
+        }
+      },
+      "ApiKeyResponse": {
+        "type": "object",
+        "description": "API Key 响应 DTO 接口 (不包含原始 key，只包含前缀)",
+        "required": ["id", "name", "keyHash", "keyPrefix", "type", "createdAt", "updatedAt", "userId"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "API Key ID",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "API Key 名称"
+          },
+          "keyHash": {
+            "type": "string",
+            "description": "存储 API Key 的哈希值"
+          },
+          "keyPrefix": {
+            "type": "string",
+            "description": "API Key 的前缀，用于显示"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ApiKeyType"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "创建时间"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "更新时间"
+          },
+          "userId": {
+            "type": "string",
+            "description": "关联的用户 ID",
+            "format": "uuid"
+          }
+        }
+      },
+      "UpdateApiKeyRequest": {
+        "type": "object",
+        "description": "更新 API Key 请求 DTO 接口",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "API Key 名称"
+          },
+          "key": {
+            "type": "string",
+            "description": "原始 API Key"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ApiKeyType"
+          }
+        }
+      },
+      "LogLevel": {
+        "type": "string",
+        "description": "日志级别枚举",
+        "enum": ["error", "warn", "info", "http", "verbose", "debug", "silly"]
+      },
+      "LogEntry": {
+        "type": "object",
+        "description": "日志条目接口",
+        "required": ["timestamp", "level", "module", "message"],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "description": "ISO 8601 格式的时间戳",
+            "format": "date-time"
+          },
+          "level": {
+            "$ref": "#/components/schemas/LogLevel"
+          },
+          "module": {
+            "type": "string",
+            "description": "记录日志的模块，例如 'AuthService', 'ConfigService'",
+            "example": "AuthService"
+          },
+          "message": {
+            "type": "string",
+            "description": "日志消息"
+          }
+        },
+        "additionalProperties": true
+      },
+      "LogResponse": {
+        "type": "object",
+        "description": "日志响应 DTO 接口",
+        "required": ["entries", "totalCount", "currentPage", "pageSize"],
+        "properties": {
+          "entries": {
+            "type": "array",
+            "description": "日志条目列表",
+            "items": {
+              "$ref": "#/components/schemas/LogEntry"
+            }
+          },
+          "totalCount": {
+            "type": "integer",
+            "description": "总记录数",
+            "minimum": 0
+          },
+          "currentPage": {
+            "type": "integer",
+            "description": "当前页码",
+            "minimum": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "description": "每页大小",
+            "minimum": 1
+          }
+        }
+      },
+      "GetLogsRequest": {
+        "type": "object",
+        "description": "获取日志请求 DTO 接口",
+        "properties": {
+          "level": {
+            "$ref": "#/components/schemas/LogLevel"
+          },
+          "module": {
+            "type": "string",
+            "description": "模块名称过滤"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "ISO 8601 格式的开始日期",
+            "format": "date-time"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "ISO 8601 格式的结束日期",
+            "format": "date-time"
+          },
+          "search": {
+            "type": "string",
+            "description": "搜索关键词"
+          },
+          "page": {
+            "type": "integer",
+            "description": "页码",
+            "minimum": 1,
+            "default": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "description": "每页大小",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20
+          }
+        }
+      },
+      "TokenType": {
+        "type": "string",
+        "description": "令牌类型枚举",
+        "enum": ["access", "refresh", "temp"]
+      },
+      "TokenStatus": {
+        "type": "string",
+        "description": "令牌状态枚举",
+        "enum": ["valid", "expired", "invalid", "revoked"]
+      },
+      "TokenPair": {
+        "type": "object",
+        "description": "令牌对",
+        "required": ["accessToken", "refreshToken", "accessTokenExpiresAt", "refreshTokenExpiresAt", "tokenType"],
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "访问令牌"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "刷新令牌"
+          },
+          "accessTokenExpiresAt": {
+            "type": "integer",
+            "description": "访问令牌过期时间（Unix时间戳）"
+          },
+          "refreshTokenExpiresAt": {
+            "type": "integer",
+            "description": "刷新令牌过期时间（Unix时间戳）"
+          },
+          "tokenType": {
+            "type": "string",
+            "description": "令牌类型",
+            "enum": ["Bearer"]
+          }
+        }
+      },
+      "TokenRefreshRequest": {
+        "type": "object",
+        "description": "令牌刷新请求",
+        "required": ["refreshToken"],
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "description": "刷新令牌"
+          }
+        }
+      },
+      "TokenRefreshResult": {
+        "type": "object",
+        "description": "令牌刷新结果",
+        "required": ["success"],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "刷新是否成功"
+          },
+          "accessToken": {
+            "type": "string",
+            "description": "新的访问令牌"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "新的刷新令牌"
+          },
+          "tokenPair": {
+            "$ref": "#/components/schemas/TokenPair"
+          },
+          "message": {
+            "type": "string",
+            "description": "错误信息"
+          },
+          "errorCode": {
+            "type": "string",
+            "description": "错误代码",
+            "enum": ["REFRESH_TOKEN_EXPIRED", "REFRESH_TOKEN_INVALID", "REFRESH_TOKEN_REVOKED"]
+          }
+        }
+      }
+    }
+  }
+}

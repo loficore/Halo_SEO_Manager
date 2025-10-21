@@ -1,0 +1,362 @@
+openapi: 3.0.3
+info:
+  title: 认证 API 端点
+  description: 用户认证、登录、注册和令牌管理相关的 API 端点
+  version: 1.0.0
+
+paths:
+  /api/auth/login:
+    post:
+      tags:
+        - 认证
+      summary: 用户登录
+      description: 使用用户名/邮箱和密码进行登录，支持多因素认证
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/auth-base.json#/components/schemas/LoginCredentials'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/auth-base.json#/components/schemas/AuthResult'
+        '401':
+          description: 认证失败
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "用户名或密码错误"
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "请求参数不完整"
+
+  /api/auth/register:
+    post:
+      tags:
+        - 认证
+      summary: 用户注册
+      description: 创建新用户账户
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/auth-base.json#/components/schemas/RegisterData'
+      responses:
+        '201':
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/auth-base.json#/components/schemas/AuthResult'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "用户名已存在"
+        '409':
+          description: 用户名或邮箱已存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "邮箱已被使用"
+
+  /api/auth/logout:
+    post:
+      tags:
+        - 认证
+      summary: 用户登出
+      description: 注销当前用户的会话，使令牌失效
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 登出成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "登出成功"
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "无效的认证令牌"
+
+  /api/auth/refresh:
+    post:
+      tags:
+        - 认证
+      summary: 刷新令牌
+      description: 使用刷新令牌获取新的访问令牌
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.json#/components/schemas/TokenRefreshRequest'
+      responses:
+        '200':
+          description: 令牌刷新成功
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/common.json#/components/schemas/TokenRefreshResult'
+        '401':
+          description: 刷新令牌无效或过期
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "刷新令牌已过期"
+
+  /api/auth/mfa/setup:
+    post:
+      tags:
+        - 多因素认证
+      summary: 设置多因素认证
+      description: 为当前用户设置多因素认证
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: MFA 设置信息
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/auth-mfa.json#/components/schemas/MfaSetupData'
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+  /api/auth/mfa/verify:
+    post:
+      tags:
+        - 多因素认证
+      summary: 验证多因素认证
+      description: 验证多因素认证代码
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  description: "6位数字验证码"
+                  pattern: "^[0-9]{6}$"
+                  example: "123456"
+      responses:
+        '200':
+          description: 验证成功
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/auth-mfa.json#/components/schemas/MfaVerificationResult'
+        '401':
+          description: 验证失败
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "验证码错误"
+
+  /api/auth/password/strength:
+    post:
+      tags:
+        - 密码管理
+      summary: 检查密码强度
+      description: 检查密码的强度并提供改进建议
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                password:
+                  type: string
+                  description: "要检查的密码"
+                  minLength: 8
+                  maxLength: 128
+                  example: "MySecurePassword123!"
+      responses:
+        '200':
+          description: 密码强度检查结果
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/auth-password.json#/components/schemas/PasswordStrengthResult'
+
+  /api/auth/password/reset:
+    post:
+      tags:
+        - 密码管理
+      summary: 请求密码重置
+      description: 请求重置密码，发送重置链接到用户邮箱
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/auth-password.json#/components/schemas/PasswordResetRequest'
+      responses:
+        '200':
+          description: 重置请求已发送
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "密码重置链接已发送到您的邮箱"
+        '404':
+          description: 用户不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "用户不存在"
+
+  /api/auth/password/reset/confirm:
+    post:
+      tags:
+        - 密码管理
+      summary: 确认密码重置
+      description: 使用重置令牌设置新密码
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/auth-password.json#/components/schemas/PasswordResetConfirm'
+      responses:
+        '200':
+          description: 密码重置成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "密码重置成功"
+        '400':
+          description: 令牌无效或过期
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "重置令牌已过期"
+
+  /api/auth/password/change:
+    post:
+      tags:
+        - 密码管理
+      summary: 更改密码
+      description: 更改当前用户的密码
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/auth-password.json#/components/schemas/PasswordChangeRequest'
+      responses:
+        '200':
+          description: 密码更改成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "密码更改成功"
+        '401':
+          description: 当前密码错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+                    example: "当前密码错误"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

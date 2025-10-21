@@ -1,0 +1,420 @@
+openapi: 3.0.3
+info:
+  title: 日志查看 API 端点
+  description: 系统日志查看和管理相关的 API 端点
+  version: 1.0.0
+
+paths:
+  /api/logs:
+    get:
+      tags:
+        - 日志管理
+      summary: 获取日志列表
+      description: 获取系统日志列表，支持过滤和分页
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: level
+          in: query
+          description: 按日志级别过滤
+          schema:
+            $ref: '../schemas/common.json#/components/schemas/LogLevel'
+        - name: module
+          in: query
+          description: 按模块过滤
+          schema:
+            type: string
+            example: "AuthService"
+        - name: startDate
+          in: query
+          description: 开始日期（ISO 8601 格式）
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: 结束日期（ISO 8601 格式）
+          schema:
+            type: string
+            format: date-time
+        - name: search
+          in: query
+          description: 搜索关键词
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          description: 每页大小
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: 日志列表
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/common.json#/components/schemas/LogResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+  /api/logs/levels:
+    get:
+      tags:
+        - 日志管理
+      summary: 获取日志级别列表
+      description: 获取所有可用的日志级别
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 日志级别列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  levels:
+                    type: array
+                    items:
+                      $ref: '../schemas/common.json#/components/schemas/LogLevel'
+                    description: "可用的日志级别"
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+  /api/logs/modules:
+    get:
+      tags:
+        - 日志管理
+      summary: 获取日志模块列表
+      description: 获取所有产生日志的模块列表
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 日志模块列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  modules:
+                    type: array
+                    items:
+                      type: string
+                    description: "产生日志的模块列表"
+                    example: ["AuthService", "ConfigService", "TaskService", "OptimizationService"]
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+  /api/logs/export:
+    post:
+      tags:
+        - 日志管理
+      summary: 导出日志
+      description: 根据过滤条件导出日志文件
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/common.json#/components/schemas/GetLogsRequest'
+      responses:
+        '200':
+          description: 日志导出成功
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+              example: "日志文件内容"
+          headers:
+            Content-Disposition:
+              description: "文件下载提示"
+              schema:
+                type: string
+                example: "attachment; filename=\"logs-export-2023-12-31.json\""
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+  /api/logs/stats:
+    get:
+      tags:
+        - 日志管理
+      summary: 获取日志统计信息
+      description: 获取指定时间范围内的日志统计信息
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          description: 开始日期（ISO 8601 格式）
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: 结束日期（ISO 8601 格式）
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: module
+          in: query
+          description: 按模块过滤
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 日志统计信息
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalLogs:
+                    type: integer
+                    description: "总日志数"
+                  levelCounts:
+                    type: object
+                    description: "各级别日志数量"
+                    additionalProperties:
+                      type: integer
+                    example:
+                      error: 5
+                      warn: 12
+                      info: 156
+                      debug: 89
+                  moduleCounts:
+                    type: object
+                    description: "各模块日志数量"
+                    additionalProperties:
+                      type: integer
+                    example:
+                      AuthService: 45
+                      TaskService: 78
+                      OptimizationService: 123
+                  timeDistribution:
+                    type: array
+                    description: "时间分布统计"
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                          description: "日期"
+                        count:
+                          type: integer
+                          description: "该日期的日志数量"
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+  /api/logs/cleanup:
+    post:
+      tags:
+        - 日志管理
+      summary: 清理旧日志
+      description: 删除指定日期之前的旧日志
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - beforeDate
+              properties:
+                beforeDate:
+                  type: string
+                  format: date-time
+                  description: "删除此日期之前的所有日志"
+                level:
+                  $ref: '../schemas/common.json#/components/schemas/LogLevel'
+                  description: "仅删除指定级别的日志（可选）"
+                module:
+                  type: string
+                  description: "仅删除指定模块的日志（可选）"
+      responses:
+        '200':
+          description: 日志清理成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "日志清理成功"
+                  deletedCount:
+                    type: integer
+                    description: "删除的日志条数"
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '401':
+          description: 未认证
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+        '403':
+          description: 权限不足
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: 错误信息
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

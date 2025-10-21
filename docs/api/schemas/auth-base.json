@@ -1,0 +1,111 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Auth Base Schema Collection",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "LoginCredentials": {
+        "type": "object",
+        "description": "用户登录凭据",
+        "required": ["username", "password"],
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "用户名或邮箱"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128,
+            "description": "密码"
+          },
+          "mfaCode": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 6,
+            "pattern": "^[0-9]{6}$",
+            "description": "多因素认证验证码（可选）"
+          }
+        }
+      },
+      "RegisterData": {
+        "type": "object",
+        "description": "用户注册信息",
+        "required": ["username", "email", "password", "confirmPassword"],
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 50,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "description": "用户名"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 255,
+            "description": "邮箱地址"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128,
+            "description": "密码"
+          },
+          "confirmPassword": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128,
+            "description": "确认密码"
+          }
+        }
+      },
+      "AuthResult": {
+        "type": "object",
+        "description": "认证结果",
+        "required": ["success"],
+        "properties": {
+          "success": { 
+            "type": "boolean",
+            "description": "认证是否成功"
+          },
+          "accessToken": { 
+            "type": "string",
+            "description": "认证令牌"
+          },
+          "refreshToken": { 
+            "type": "string",
+            "description": "刷新令牌"
+          },
+          "expiresAt": { 
+            "type": "string", 
+            "format": "date-time",
+            "description": "令牌过期时间"
+          },
+          "message": { 
+            "type": "string",
+            "description": "错误信息"
+          },
+          "requiresMfa": { 
+            "type": "boolean",
+            "description": "是否需要多因素认证"
+          },
+          "tempToken": { 
+            "type": "string",
+            "description": "临时认证令牌（用于MFA验证）"
+          }
+        }
+      },
+      "AuthStatus": {
+        "type": "string",
+        "description": "用户认证状态",
+        "enum": ["unauthenticated", "authenticated", "requires_mfa", "expired", "invalid"]
+      }
+    }
+  }
+}

@@ -26,7 +26,7 @@ graph TD
         ServiceLayer --> InfrastructureLayer[Infrastructure Layer]
     end
 
-    APILayer --> Authentication[MelodyAuth 认证]
+    APILayer --> Authentication[轻量级认证系统]
 
     subgraph Service Layer
         SeoService[SeoService]
@@ -39,13 +39,17 @@ graph TD
     subgraph Infrastructure Layer
         HaloClient[HaloClient]
         DatabaseManager[DatabaseManager]
-        MelodyAuthClient[MelodyAuth Client]
+        JwtService[JwtService]
+        MfaService[MfaService]
+        PasswordService[PasswordService]
         Logger[Logger]
         SeoOptimizer[SeoOptimizer (AI驱动)]
         SeoValidator[SeoValidator]
     end
 
-    AuthService --> MelodyAuthClient
+    AuthService --> JwtService
+    AuthService --> MfaService
+    AuthService --> PasswordService
     HaloClient --> |PATCH JSON-patch| HaloCMS[Halo CMS]
     DatabaseManager --> SQLiteDB[SQLite 数据库]
 
@@ -76,7 +80,7 @@ graph TD
     style WebUI fill:#bbf,stroke:#333,stroke-width:2px
     style Backend服务 fill:#dfd,stroke:#333,stroke-width:2px
     style SQLiteDB fill:#ffc,stroke:#333,stroke-width:2px
-    style MelodyAuth fill:#fcc,stroke:#333,stroke-width:2px
+    style 轻量级认证系统 fill:#fec,stroke:#333,stroke-width:2px
     style Deployment fill:#eef,stroke:#333,stroke-width:2px
     style GitHubDocs fill:#cfc,stroke:#333,stroke-width:2px
 ```
@@ -152,7 +156,7 @@ graph TD
 
 **主要组件**:
 
-- **AuthService**: 处理用户认证、注册、MFA、会话管理。
+- **AuthService**: 处理用户认证、注册、MFA、会话管理，使用JwtService、MfaService和PasswordService实现轻量级认证功能。
 - **ArticleService**: 管理文章数据的业务逻辑。
 - **SeoService**: 负责SEO元数据的优化、校验和发布流程。
 - **TaskService**: 管理SEO优化任务的生命周期（创建、读取、更新、删除、调度、执行、取消、状态）。
@@ -164,13 +168,15 @@ graph TD
 **接口示例**:
 
 1.  **AuthService**:
-    - `login(loginData: LoginRequestDTO): Promise<AuthResultDTO>`
-    - `register(registerData: RegisterRequestDTO, isSystemInitialized: boolean, isSmtpConfigured: boolean): Promise<AuthResultDTO>`
-    - `verifyMfa(userId: string, token: string): Promise<boolean>`
+    - `login(loginData: LoginRequestDTO): Promise<AuthResultDTO>` - 使用PasswordService验证密码，通过JwtService生成令牌
+    - `register(registerData: RegisterRequestDTO, isSystemInitialized: boolean, isSmtpConfigured: boolean): Promise<AuthResultDTO>` - 使用PasswordService哈希密码
+    - `verifyMfa(userId: string, token: string): Promise<boolean>` - 通过MfaService验证MFA令牌
     - `getUserProfile(userId: string): Promise<UserProfileDTO | null>`
     - `logout(userId: string): Promise<boolean>`
-    - `refreshAccessToken(refreshToken: string): Promise<string | null>`
+    - `refreshAccessToken(refreshToken: string): Promise<string | null>` - 通过JwtService刷新令牌
     - `checkPermission(userId: string, permission: string): Promise<boolean>`
+    - `enableMfa(userId: string): Promise<{ success: boolean; secret?: string; qrcodeUrl?: string; message?: string }>` - 通过MfaService启用MFA
+    - `disableMfa(userId: string): Promise<boolean>` - 通过MfaService禁用MFA
 
 2.  **ArticleService**:
     - `getArticles(pagination: PaginationDTO, filters: ArticleFilterDTO): Promise<PaginatedResultDTO<ArticleDTO>>`
@@ -226,9 +232,10 @@ graph TD
 
 **职责**:
 
-- 封装与外部系统（Halo CMS、MelodyAuth）和底层资源（数据库、文件系统）的交互细节。
+- 封装与外部系统（Halo CMS）和底层资源（数据库、文件系统）的交互细节。
 - 提供原子性的操作接口，供服务层调用。
 - 处理数据转换（如从数据库模型到业务领域模型）。
+- 提供轻量级认证系统的基础组件支持。
 
 **主要组件**:
 
@@ -240,19 +247,27 @@ graph TD
     - **职责**: 管理SQLite数据库连接、CRUD操作、数据备份。
     - **接口**: `initDb(): Promise<void>`, `saveArticleData(article: ArticleData): Promise<void>`, `getArticleData(articleId: string): Promise<ArticleData | null>`, `updateArticleOptimizationStatus(articleId: string, status: 'pending' | 'optimized' | 'failed', timestamp: Date): Promise<void>`, `saveConfig(userId: string, key: string, value: string): Promise<void>`, `getConfig(userId: string, key: string): Promise<string | null>`, `backupDatabase(destinationPath: string): Promise<void>`.
 
-3.  **MelodyAuthClient**:
-    - **职责**: 与外部MelodyAuth服务进行通信，处理实际的认证和授权请求。
-    - **接口**: `authenticate(credentials: any): Promise<any>`, `registerUser(userData: any): Promise<any>`, `verifyMfaToken(userId: string, token: string): Promise<boolean>`, `authorize(userId: string, resource: string, action: string): Promise<boolean>`.
+3.  **JwtService**:
+    - **职责**: 处理JWT令牌的创建、验证和刷新。
+    - **接口**: `generateToken(payload: JwtPayload): Promise<string>`, `verifyToken(token: string): Promise<JwtPayload | null>`, `refreshToken(refreshToken: string): Promise<string | null>`.
 
-4.  **Logger**:
+4.  **MfaService**:
+    - **职责**: 处理多因素认证相关功能，包括生成和管理MFA密钥、验证MFA令牌。
+    - **接口**: `generateSecret(userId: string, username: string): Promise<{ secret: string; qrcodeUrl: string }>, `verifyToken(userId: string, token: string): Promise<boolean>`, `enableMfa(userId: string, secret: string): Promise<boolean>`, `disableMfa(userId: string): Promise<boolean>`.
+
+5.  **PasswordService**:
+    - **职责**: 处理密码哈希、验证和强度检查。
+    - **接口**: `hashPassword(password: string): Promise<string>`, `verifyPassword(password: string, hash: string): Promise<boolean>`, `validatePasswordStrength(password: string): { isValid: boolean; errors?: string[] }`.
+
+6.  **Logger**:
     - **职责**: 提供统一的日志记录功能。
     - **接口**: `log(level: LogLevel, module: string, message: string, context?: any): void`.
 
-5.  **SeoOptimizer (旧SeoOptimizer)**:
+7.  **SeoOptimizer (旧SeoOptimizer)**:
     - **职责**: 封装与LLM的交互逻辑，生成SEO元数据。
     - **接口**: `optimizeArticle(title: string, content: string, currentSeoMeta: SeoMeta | null, previousOutput: string | null, validationFeedback: ValidationFeedback | null): Promise<SeoMeta | null>`.
 
-6.  **SeoValidator (旧SeoValidator)**:
+8.  **SeoValidator (旧SeoValidator)**:
     - **职责**: 封装SEO元数据验证规则。
     - **接口**: `validate(seoMeta: SeoMeta): ValidationResult`.
 

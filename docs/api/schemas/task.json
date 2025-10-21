@@ -1,0 +1,146 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Task Schema Collection",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "TaskStatus": {
+        "type": "string",
+        "description": "任务状态枚举",
+        "enum": ["PENDING", "RUNNING", "COMPLETED", "FAILED", "CANCELLED"]
+      },
+      "CreateTaskRequest": {
+        "type": "object",
+        "description": "创建任务请求 DTO 接口",
+        "required": ["userId", "articleId", "scheduleCron", "llmModel", "optimizationParams"],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "用户ID",
+            "format": "uuid"
+          },
+          "articleId": {
+            "type": "string",
+            "description": "Halo 文章 ID"
+          },
+          "scheduleCron": {
+            "type": "string",
+            "description": "Cron 表达式，例如 \"0 0 * * *\" 每天午夜",
+            "example": "0 0 * * *"
+          },
+          "llmModel": {
+            "type": "string",
+            "description": "用于优化的 LLM 模型",
+            "example": "gpt-3.5-turbo"
+          },
+          "optimizationParams": {
+            "$ref": "#/components/schemas/OptimizationParams"
+          }
+        }
+      },
+      "TaskResponse": {
+        "type": "object",
+        "description": "任务响应 DTO 接口",
+        "required": ["id", "userId", "articleId", "scheduleCron", "llmModel", "optimizationParams", "status", "createdAt", "updatedAt"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "任务ID",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "description": "用户ID",
+            "format": "uuid"
+          },
+          "articleId": {
+            "type": "string",
+            "description": "Halo 文章 ID"
+          },
+          "scheduleCron": {
+            "type": "string",
+            "description": "Cron 表达式",
+            "example": "0 0 * * *"
+          },
+          "llmModel": {
+            "type": "string",
+            "description": "用于优化的 LLM 模型",
+            "example": "gpt-3.5-turbo"
+          },
+          "optimizationParams": {
+            "$ref": "#/components/schemas/OptimizationParams"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "创建时间"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "更新时间"
+          }
+        }
+      },
+      "UpdateTaskRequest": {
+        "type": "object",
+        "description": "更新任务请求 DTO 接口",
+        "properties": {
+          "scheduleCron": {
+            "type": "string",
+            "description": "Cron 表达式",
+            "example": "0 0 * * *"
+          },
+          "llmModel": {
+            "type": "string",
+            "description": "用于优化的 LLM 模型",
+            "example": "gpt-3.5-turbo"
+          },
+          "optimizationParams": {
+            "$ref": "#/components/schemas/OptimizationParams"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus"
+          }
+        }
+      },
+      "OptimizationParams": {
+        "type": "object",
+        "description": "SEO 优化参数接口",
+        "required": ["minContentLength", "maxContentLength", "minDaysSinceLastOptimization", "forceReoptimize"],
+        "properties": {
+          "minContentLength": {
+            "type": "integer",
+            "description": "最小内容长度"
+          },
+          "maxContentLength": {
+            "type": "integer",
+            "description": "最大内容长度"
+          },
+          "minDaysSinceLastOptimization": {
+            "type": "integer",
+            "description": "距离上次优化的最小天数"
+          },
+          "forceReoptimize": {
+            "type": "boolean",
+            "description": "是否强制重新优化"
+          },
+          "metaDescriptionLength": {
+            "type": "integer",
+            "description": "允许 LLM 生成的 metaDescription 长度 (例如：160)"
+          },
+          "keywordsCount": {
+            "type": "integer",
+            "description": "允许 LLM 生成的关键词数量 (例如：3)"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Auth MFA Schema Collection",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "MfaSetupData": {
+        "type": "object",
+        "description": "多因素认证设置信息",
+        "required": ["secret", "backupCodes", "qrCodeUrl", "appName", "accountName"],
+        "properties": {
+          "secret": { 
+            "type": "string",
+            "description": "秘密密钥"
+          },
+          "backupCodes": {
+            "type": "array",
+            "description": "备用恢复代码",
+            "items": { "type": "string" },
+            "minItems": 10,
+            "maxItems": 10
+          },
+          "qrCodeUrl": { 
+            "type": "string", 
+            "format": "uri",
+            "description": "QR码数据URL"
+          },
+          "appName": { 
+            "type": "string",
+            "description": "应用名称"
+          },
+          "accountName": { 
+            "type": "string",
+            "description": "用户账户名称"
+          }
+        }
+      },
+      "MfaVerificationResult": {
+        "type": "object",
+        "description": "多因素认证验证结果",
+        "required": ["success"],
+        "properties": {
+          "success": { 
+            "type": "boolean",
+            "description": "验证是否成功"
+          },
+          "message": { 
+            "type": "string",
+            "description": "错误信息"
+          },
+          "tokens": {
+            "type": "object",
+            "description": "验证成功后的令牌对",
+            "required": ["accessToken", "refreshToken", "expiresAt"],
+            "properties": {
+              "accessToken": { 
+                "type": "string",
+                "description": "访问令牌"
+              },
+              "refreshToken": { 
+                "type": "string",
+                "description": "刷新令牌"
+              },
+              "expiresAt": { 
+                "type": "string", 
+                "format": "date-time",
+                "description": "令牌过期时间"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

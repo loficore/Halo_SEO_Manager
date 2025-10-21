@@ -1,0 +1,153 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "User Schema Collection",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "UserRole": {
+        "type": "string",
+        "description": "用户角色枚举",
+        "enum": ["admin", "user"]
+      },
+      "User": {
+        "type": "object",
+        "description": "用户接口",
+        "required": ["id", "username", "passwordHash", "role", "createdAt", "updatedAt"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "用户唯一标识符",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string",
+            "description": "用户名",
+            "minLength": 3,
+            "maxLength": 50,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "email": {
+            "type": "string",
+            "description": "邮箱地址",
+            "format": "email",
+            "maxLength": 255
+          },
+          "passwordHash": {
+            "type": "string",
+            "description": "密码哈希值",
+            "minLength": 1
+          },
+          "mfaSecret": {
+            "type": "string",
+            "description": "多因素认证密钥",
+            "minLength": 0
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "创建时间"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "更新时间"
+          }
+        }
+      },
+      "CreateUserRequest": {
+        "type": "object",
+        "description": "创建用户请求 DTO 接口",
+        "required": ["username", "password"],
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "用户名",
+            "minLength": 3,
+            "maxLength": 50,
+            "pattern": "^[a-zA-Z0-9_-]+$"
+          },
+          "email": {
+            "type": "string",
+            "description": "邮箱地址",
+            "format": "email",
+            "maxLength": 255
+          },
+          "password": {
+            "type": "string",
+            "description": "密码",
+            "minLength": 8,
+            "maxLength": 128
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole",
+            "default": "user"
+          }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "description": "用户响应 DTO 接口 (不包含密码哈希和 MFA 密钥)",
+        "required": ["id", "username", "role", "createdAt", "updatedAt"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "用户唯一标识符",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string",
+            "description": "用户名",
+            "minLength": 3,
+            "maxLength": 50
+          },
+          "email": {
+            "type": "string",
+            "description": "邮箱地址",
+            "format": "email",
+            "maxLength": 255
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "创建时间"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "更新时间"
+          }
+        }
+      },
+      "UpdateUserRoleRequest": {
+        "type": "object",
+        "description": "更新用户角色请求 DTO 接口",
+        "required": ["role"],
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
+          }
+        }
+      },
+      "UpdateUserMfaSecretRequest": {
+        "type": "object",
+        "description": "更新用户 MFA 密钥请求 DTO 接口",
+        "required": ["mfaSecret"],
+        "properties": {
+          "mfaSecret": {
+            "type": ["string", "null"],
+            "description": "多因素认证密钥，null 表示禁用 MFA"
+          }
+        }
+      }
+    }
+  }
+}

@@ -4,11 +4,35 @@
 
 ---
 
-## 1. `RegisterPage` (注册页面) - 注册逻辑的条件性开放
+## 进展总结
 
-### 1.1 API 端点设计
+### 已完成的主要里程碑
 
-- **`GET /api/config/status`** (用于前端判断是否显示注册页面)
+1.  **核心后端服务和控制器的实现** (提交: `514b157`)
+    - 已实现认证服务 ([`AuthService`](src/services/AuthService.ts:1))、配置服务 ([`ConfigService`](src/services/ConfigService.ts:1))、API密钥服务 ([`ApiKeyService`](src/services/ApiKeyService.ts:1))、任务服务 ([`TaskService`](src/services/TaskService.ts:1))、优化服务 ([`OptimizationService`](src/services/OptimizationService.ts:1)) 和日志服务 ([`LogService`](src/services/LogService.ts:1))
+    - 已实现对应的控制器，包括认证控制器 ([`authController`](src/api/authController.ts:1))、配置控制器 ([`configController`](src/api/configController.ts:1))、API密钥控制器 ([`apiKeyController`](src/api/apiKeyController.ts:1))、任务控制器 ([`taskController`](src/api/taskController.ts:1))、优化控制器 ([`optimizationController`](src/api/optimizationController.ts:1)) 和日志控制器 ([`logController`](src/api/logController.ts:1))
+
+2.  **认证和全局错误处理中间件的引入** (提交: `86ead08`)
+    - 已实现认证中间件 ([`authMiddleware`](src/middleware/authMiddleware.ts:1))，支持JWT令牌验证和用户权限检查
+    - 已实现全局错误处理中间件 ([`errorHandler`](src/middleware/errorHandler.ts:1))，统一处理应用程序中的错误
+
+3.  **数据库架构的重构（DAO 模式和迁移）** (提交: `52092aa`)
+    - 已实现DAO模式，包括用户表 ([`UserTable`](src/sql/dao/UserTable.ts:1))、API密钥表 ([`ApiKeyTable`](src/sql/dao/ApiKeyTable.ts:1))、文章表 ([`ArticleTable`](src/sql/dao/ArticleTable.ts:1))、计划任务表 ([`ScheduledTaskTable`](src/sql/dao/ScheduledTaskTable.ts:1))、SEO运行表 ([`SeoRunTable`](src/sql/dao/SeoRunTable.ts:1)) 和设置表 ([`SettingsTable`](src/sql/dao/SettingsTable.ts:1))
+    - 已实现数据库迁移机制 ([`V1__initial_schema.sql.ts`](src/sql/migrations/V1__initial_schema.sql.ts:1))
+
+4.  **集成测试的添加** (提交: `b8600c6`)
+    - 已添加全面的集成测试 ([`integration.test.ts`](src/__tests__/integration.test.ts:1))，覆盖配置管理、用户认证、API密钥管理、任务管理和全局错误处理
+
+5.  **代码格式优化和错误处理简化** (提交: `f8c9f77`)
+    - 已优化代码格式，简化错误处理返回逻辑
+
+---
+
+## 1. `RegisterPage` (注册页面) - 注册逻辑的条件性开放 ✅ 已完成
+
+### 1.1 API 端点设计 ✅ 已完成
+
+- **`GET /api/config/status`** (用于前端判断是否显示注册页面) ✅ 已完成
   - **HTTP 方法**: `GET`
   - **路径**: `/api/config/status`
   - **请求体**: 无
@@ -21,8 +45,9 @@
     }
     ```
   - **DTO**: `SystemStatusDto`
+  - **实现位置**: [`configController.ts`](src/api/configController.ts:155)
 
-- **`POST /api/auth/register`** (修改现有端点)
+- **`POST /api/auth/register`** (修改现有端点) ✅ 已完成
   - **HTTP 方法**: `POST`
   - **路径**: `/api/auth/register`
   - **请求体示例**:
@@ -39,39 +64,47 @@
     }
     ```
   - **DTO**: `RegisterRequestDto` (请求), `MessageResponseDto` (响应)
+  - **实现位置**: [`authController.ts`](src/api/authController.ts:119)
 
-### 1.2 核心业务逻辑概要
+### 1.2 核心业务逻辑概要 ✅ 已完成
 
-- **`ConfigService.getSystemStatus()`**:
+- **`ConfigService.getSystemStatus()`** ✅ 已完成
   - 从 `settings` 表中读取 `is_system_initialized` 和 `is_smtp_configured` 状态。
   - 根据这两个状态计算 `isRegistrationOpen` (即 `isInitialized && isSmtpConfigured`)。
   - **JSDoc**: 为方法添加详细 JSDoc。
-- **`AuthService.registerUser(username, password)`**:
+  - **实现位置**: [`ConfigService.ts`](src/services/ConfigService.ts:30)
+
+- **`AuthService.registerUser(username, password)`** ✅ 已完成
   - 在执行实际注册逻辑前，调用 `ConfigService.getSystemStatus()` 检查 `isRegistrationOpen`。
   - 如果 `isRegistrationOpen` 为 `false`，则抛出自定义错误（例如 `RegistrationDisabledError`）。
   - **JSDoc**: 更新 JSDoc，说明条件性注册逻辑。
-- **`authController.registerUser`**:
+  - **实现位置**: [`AuthService.ts`](src/services/AuthService.ts:233)
+
+- **`authController.registerUser`** ✅ 已完成
   - 在调用 `AuthService.registerUser` 之前，添加中间件或控制器逻辑，捕获 `RegistrationDisabledError` 并返回 403 Forbidden 响应。
+  - **实现位置**: [`authController.ts`](src/api/authController.ts:119)
 
-### 1.3 数据库架构变更
+### 1.3 数据库架构变更 ✅ 已完成
 
-- **`settings` 表**:
+- **`settings` 表** ✅ 已完成
   - 新增字段 `is_system_initialized` (BOOLEAN, 默认值 `FALSE`)。
   - 新增字段 `is_smtp_configured` (BOOLEAN, 默认值 `FALSE`)。
+  - **实现位置**: [`V1__initial_schema.sql.ts`](src/sql/migrations/V1__initial_schema.sql.ts:1)
 
-### 1.4 错误处理机制
+### 1.4 错误处理机制 ✅ 已完成
 
 - **注册被禁用**: `AuthService` 抛出 `RegistrationDisabledError`，`authController` 捕获并返回 403 Forbidden。
 - **用户名已存在**: `AuthService` 抛出 `UserExistsError`，`authController` 捕获并返回 409 Conflict。
 - **密码不符合要求**: `AuthService` 抛出 `InvalidPasswordError`，`authController` 捕获并返回 400 Bad Request。
+- **实现位置**: [`errorHandler.ts`](src/middleware/errorHandler.ts:1)
 
 ---
 
-## 2. `InitializationPage` (系统初始化页面)
+## 2. `InitializationPage` (系统初始化页面) ✅ 已完成
 
-### 2.1 API 端点设计
+### 2.1 API 端点设计 ✅ 已完成
 
-- **`POST /api/config/initialize`**
+- **`POST /api/config/initialize`** ✅ 已完成
   - **HTTP 方法**: `POST`
   - **路径**: `/api/config/initialize`
   - **请求体示例**:
@@ -108,10 +141,11 @@
     }
     ```
   - **DTO**: `InitializeSystemRequestDto` (请求), `MessageResponseDto` (响应)
+  - **实现位置**: [`configController.ts`](src/api/configController.ts:35)
 
-### 2.2 核心业务逻辑概要
+### 2.2 核心业务逻辑概要 ✅ 已完成
 
-- **`ConfigService.initializeSystem(initData: InitializeSystemRequestDto)`**:
+- **`ConfigService.initializeSystem(initData: InitializeSystemRequestDto)`** ✅ 已完成
   1.  调用 `ConfigService.getSystemStatus()` 检查 `isInitialized` 状态。如果为 `true`，则抛出 `SystemAlreadyInitializedError`。
   2.  验证 `initData` 中的所有参数（使用 `express-validator` 或自定义验证器）。
   3.  调用 `AuthService.registerUser(adminUsername, adminPassword, 'admin')` 注册初始管理员账号，并赋予 `admin` 角色。
@@ -119,31 +153,38 @@
   5.  更新 `settings` 表中的 `is_system_initialized` 状态为 `true`。
   6.  根据 `smtpConfig` 是否提供且有效，更新 `is_smtp_configured` 状态。
   - **JSDoc**: 为方法添加详细 JSDoc。
-- **`ConfigController.initializeSystem`**:
+  - **实现位置**: [`ConfigService.ts`](src/services/ConfigService.ts:95)
+
+- **`ConfigController.initializeSystem`** ✅ 已完成
   - 处理 `POST /api/config/initialize` 请求，调用 `ConfigService.initializeSystem`。
   - **JSDoc**: 为控制器方法添加详细 JSDoc。
+  - **实现位置**: [`configController.ts`](src/api/configController.ts:35)
 
-### 2.3 数据库架构变更
+### 2.3 数据库架构变更 ✅ 已完成
 
-- **`settings` 表**:
+- **`settings` 表** ✅ 已完成
   - `value` 字段类型应支持存储 JSON 对象（例如，使用 TEXT 字段存储 JSON 字符串）。
   - 确保能够存储 `db_path`, `smtp_config`, `llm_config`, `optimization_params` 等配置项。
-- **`users` 表**:
-  - 新增字段 `role` (TEXT, 例如 'admin', 'user')，默认值 'user'。
+  - **实现位置**: [`V1__initial_schema.sql.ts`](src/sql/migrations/V1__initial_schema.sql.ts:1)
 
-### 2.4 错误处理机制
+- **`users` 表** ✅ 已完成
+  - 新增字段 `role` (TEXT, 例如 'admin', 'user')，默认值 'user'。
+  - **实现位置**: [`V1__initial_schema.sql.ts`](src/sql/migrations/V1__initial_schema.sql.ts:1)
+
+### 2.4 错误处理机制 ✅ 已完成
 
 - **系统已初始化**: `ConfigService` 抛出 `SystemAlreadyInitializedError`，`ConfigController` 捕获并返回 409 Conflict。
 - **请求参数验证失败**: `ConfigController` 返回 400 Bad Request。
 - **管理员注册失败**: `AuthService` 抛出错误，`ConfigService` 捕获并返回 500 Internal Server Error。
+- **实现位置**: [`errorHandler.ts`](src/middleware/errorHandler.ts:1)
 
 ---
 
-## 3. `ApiKeyManagementPage` (API Key 管理页面)
+## 3. `ApiKeyManagementPage` (API Key 管理页面) ✅ 已完成
 
-### 3.1 API 端点设计
+### 3.1 API 端点设计 ✅ 已完成
 
-- **`GET /api/api-keys`**
+- **`GET /api/api-keys`** ✅ 已完成
   - **HTTP 方法**: `GET`
   - **路径**: `/api/api-keys`
   - **请求体**: 无
@@ -169,8 +210,9 @@
     ]
     ```
   - **DTO**: `ApiKeyDto[]`
+  - **实现位置**: [`apiKeyController.ts`](src/api/apiKeyController.ts:31)
 
-- **`POST /api/api-keys`**
+- **`POST /api/api-keys`** ✅ 已完成
   - **HTTP 方法**: `POST`
   - **路径**: `/api/api-keys`
   - **请求体示例**:
@@ -192,8 +234,9 @@
     }
     ```
   - **DTO**: `CreateApiKeyRequestDto` (请求), `ApiKeyDto` (响应)
+  - **实现位置**: [`apiKeyController.ts`](src/api/apiKeyController.ts:74)
 
-- **`PUT /api/api-keys/:id`**
+- **`PUT /api/api-keys/:id`** ✅ 已完成
   - **HTTP 方法**: `PUT`
   - **路径**: `/api/api-keys/:id`
   - **请求体示例**:
@@ -209,8 +252,9 @@
     }
     ```
   - **DTO**: `UpdateApiKeyRequestDto` (请求), `MessageResponseDto` (响应)
+  - **实现位置**: [`apiKeyController.ts`](src/api/apiKeyController.ts:163)
 
-- **`DELETE /api/api-keys/:id`**
+- **`DELETE /api/api-keys/:id`** ✅ 已完成
   - **HTTP 方法**: `DELETE`
   - **路径**: `/api/api-keys/:id`
   - **请求体**: 无
@@ -221,35 +265,45 @@
     }
     ```
   - **DTO**: `MessageResponseDto`
+  - **实现位置**: [`apiKeyController.ts`](src/api/apiKeyController.ts:159)
 
-### 3.2 核心业务逻辑概要
+### 3.2 核心业务逻辑概要 ✅ 已完成
 
-- **`ApiKeyService` (新增)**:
-  - **`getApiKeys(userId: string)`**:
+- **`ApiKeyService` (新增)** ✅ 已完成
+  - **`getApiKeys(userId: string)`** ✅ 已完成
     - 从 `api_keys` 表中获取指定 `userId` 的所有 API Keys。
     - 只返回 Key 的前缀 (`keyPrefix`)，不返回完整 Key。
     - **JSDoc**: 为方法添加详细 JSDoc。
-  - **`createApiKey(userId: string, name: string, type?: string)`**:
+    - **实现位置**: [`ApiKeyService.ts`](src/services/ApiKeyService.ts:111)
+
+  - **`createApiKey(userId: string, name: string, type?: string)`** ✅ 已完成
     - 生成一个安全的、唯一的 API Key (例如，使用 `crypto` 模块)。
     - 计算 Key 的哈希值 (`keyHash`) 和前缀 (`keyPrefix`)。
     - 将 `id`, `name`, `keyHash`, `keyPrefix`, `createdAt`, `userId`, `type` 存储到 `api_keys` 表。
     - **JSDoc**: 为方法添加详细 JSDoc。
-  - **`updateApiKey(userId: string, id: string, newName: string)`**:
+    - **实现位置**: [`ApiKeyService.ts`](src/services/ApiKeyService.ts:69)
+
+  - **`updateApiKey(userId: string, id: string, newName: string)`** ✅ 已完成
     - 验证指定 `id` 的 Key 是否属于 `userId`。
     - 更新 `api_keys` 表中指定 ID 的 Key 的 `name` 字段。
     - **JSDoc**: 为方法添加详细 JSDoc。
-  - **`deleteApiKey(userId: string, id: string)`**:
+    - **实现位置**: [`ApiKeyService.ts`](src/services/ApiKeyService.ts:153)
+
+  - **`deleteApiKey(userId: string, id: string)`** ✅ 已完成
     - 验证指定 `id` 的 Key 是否属于 `userId`。
     - 从 `api_keys` 表中删除指定 ID 的 Key。
     - **JSDoc**: 为方法添加详细 JSDoc。
-- **`ApiKeyController` (新增)**:
+    - **实现位置**: [`ApiKeyService.ts`](src/services/ApiKeyService.ts:129)
+
+- **`ApiKeyController` (新增)** ✅ 已完成
   - 处理所有 `/api/api-keys` 相关的请求，调用 `ApiKeyService` 的相应方法。
   - 实现请求参数校验（例如，`name` 不能为空）。
   - **JSDoc**: 为控制器及其方法添加详细 JSDoc。
+  - **实现位置**: [`apiKeyController.ts`](src/api/apiKeyController.ts:1)
 
-### 3.3 数据库架构变更
+### 3.3 数据库架构变更 ✅ 已完成
 
-- **`api_keys` 表**:
+- **`api_keys` 表** ✅ 已完成
   - 新增字段 `id` (TEXT, PRIMARY KEY, UUID)。
   - 新增字段 `name` (TEXT, NOT NULL)。
   - 新增字段 `key_hash` (TEXT, NOT NULL, 存储 Key 的哈希值)。
@@ -257,20 +311,22 @@
   - 新增字段 `created_at` (DATETIME, NOT NULL, 默认当前时间)。
   - 新增字段 `user_id` (TEXT, NOT NULL, 外键关联 `users` 表)。
   - 新增字段 `type` (TEXT, 可选，例如 'LLM', 'CMS')。
+  - **实现位置**: [`V1__initial_schema.sql.ts`](src/sql/migrations/V1__initial_schema.sql.ts:1)
 
-### 3.4 错误处理机制
+### 3.4 错误处理机制 ✅ 已完成
 
 - **请求参数验证失败**: `ApiKeyController` 返回 400 Bad Request。
 - **API Key 不存在**: `ApiKeyService` 抛出 `ApiKeyNotFoundError`，`ApiKeyController` 捕获并返回 404 Not Found。
 - **权限不足**: `ApiKeyService` 抛出 `UnauthorizedError`，`ApiKeyController` 捕获并返回 403 Forbidden。
+- **实现位置**: [`errorHandler.ts`](src/middleware/errorHandler.ts:1)
 
 ---
 
-## 4. `TaskSchedulingPage` (任务调度页面)
+## 4. `TaskSchedulingPage` (任务调度页面) ✅ 已完成
 
-### 4.1 API 端点设计
+### 4.1 API 端点设计 ✅ 已完成
 
-- **`GET /api/tasks`**
+- **`GET /api/tasks`** ✅ 已完成
   - **HTTP 方法**: `GET`
   - **路径**: `/api/tasks`
   - **请求参数**: `status` (可选: `scheduled`, `running`, `completed`, `failed`), `limit`, `offset`
@@ -290,8 +346,9 @@
     ]
     ```
   - **DTO**: `ScheduledTaskDto[]`
+  - **实现位置**: [`taskController.ts`](src/api/taskController.ts:39)
 
-- **`POST /api/tasks`**
+- **`POST /api/tasks`** ✅ 已完成
   - **HTTP 方法**: `POST`
   - **路径**: `/api/tasks`
   - **请求体示例**:
@@ -313,8 +370,9 @@
     }
     ```
   - **DTO**: `CreateTaskRequestDto` (请求), `MessageResponseDto` (响应)
+  - **实现位置**: [`taskController.ts`](src/api/taskController.ts:84)
 
-- **`PUT /api/tasks/:id`**
+- **`PUT /api/tasks/:id`** ✅ 已完成
   - **HTTP 方法**: `PUT`
   - **路径**: `/api/tasks/:id`
   - **请求体示例**:
@@ -331,8 +389,9 @@
     }
     ```
   - **DTO**: `UpdateTaskRequestDto` (请求), `MessageResponseDto` (响应)
+  - **实现位置**: [`taskController.ts`](src/api/taskController.ts:161)
 
-- **`DELETE /api/tasks/:id`**
+- **`DELETE /api/tasks/:id`** ✅ 已完成
   - **HTTP 方法**: `DELETE`
   - **路径**: `/api/tasks/:id`
   - **请求体**: 无
@@ -343,8 +402,9 @@
     }
     ```
   - **DTO**: `MessageResponseDto`
+  - **实现位置**: [`taskController.ts`](src/api/taskController.ts:241)
 
-- **`POST /api/tasks/:id/run`**
+- **`POST /api/tasks/:id/run`** ⚠️ 部分完成
   - **HTTP 方法**: `POST`
   - **路径**: `/api/tasks/:id/run`
   - **请求体**: 无
@@ -355,41 +415,53 @@
     }
     ```
   - **DTO**: `MessageResponseDto`
+  - **实现位置**: 需要实现
 
-### 4.2 核心业务逻辑概要
+### 4.2 核心业务逻辑概要 ✅ 已完成
 
-- **`TaskService` (新增)**:
-  - **`getScheduledTasks(userId: string, filters: { status?: string, limit?: number, offset?: number })`**:
+- **`TaskService` (新增)** ✅ 已完成
+  - **`getScheduledTasks(userId: string, filters: { status?: string, limit?: number, offset?: number })`** ✅ 已完成
     - 从 `scheduled_tasks` 表中获取指定 `userId` 的调度任务，支持过滤和分页。
     - **JSDoc**: 为方法添加详细 JSDoc。
-  - **`createTask(userId: string, taskData: CreateTaskRequestDto)`**:
+    - **实现位置**: [`TaskService.ts`](src/services/TaskService.ts:111)
+
+  - **`createTask(userId: string, taskData: CreateTaskRequestDto)`** ✅ 已完成
     - 验证 `taskData` (例如，`articleId` 存在，`schedule` 是有效的 cron 表达式)。
     - 将任务信息存储到 `scheduled_tasks` 表。
     - 与 `Scheduler` 模块交互，安排新的 cron 任务。
     - **JSDoc**: 为方法添加详细 JSDoc。
-  - **`updateTask(userId: string, id: string, updateData: UpdateTaskRequestDto)`**:
+    - **实现位置**: [`TaskService.ts`](src/services/TaskService.ts:43)
+
+  - **`updateTask(userId: string, id: string, updateData: UpdateTaskRequestDto)`** ✅ 已完成
     - 验证用户权限和 `updateData`。
     - 更新 `scheduled_tasks` 表中指定 ID 的任务。
     - 通知 `Scheduler` 模块更新或重新安排任务。
     - **JSDoc**: 为方法添加详细 JSDoc。
-  - **`deleteTask(userId: string, id: string)`**:
+    - **实现位置**: [`TaskService.ts`](src/services/TaskService.ts:199)
+
+  - **`deleteTask(userId: string, id: string)`** ✅ 已完成
     - 验证用户权限。
     - 从 `scheduled_tasks` 表中删除指定 ID 的任务。
     - 通知 `Scheduler` 模块移除任务。
     - **JSDoc**: 为方法添加详细 JSDoc。
-  - **`triggerTask(userId: string, id: string)`**:
+    - **实现位置**: [`TaskService.ts`](src/services/TaskService.ts:241)
+
+  - **`triggerTask(userId: string, id: string)`** ⚠️ 部分完成
     - 验证用户权限。
     - 获取任务详情。
     - 调用 `Scheduler` 模块的相应方法，手动触发任务运行。
     - **JSDoc**: 为方法添加详细 JSDoc。
-- **`TaskController` (新增)**:
+    - **实现位置**: 需要实现
+
+- **`TaskController` (新增)** ✅ 已完成
   - 处理所有 `/api/tasks` 相关的请求，调用 `TaskService` 的相应方法。
   - 实现请求参数校验。
   - **JSDoc**: 为控制器及其方法添加详细 JSDoc。
+  - **实现位置**: [`taskController.ts`](src/api/taskController.ts:1)
 
-### 4.3 数据库架构变更
+### 4.3 数据库架构变更 ✅ 已完成
 
-- **`scheduled_tasks` 表**:
+- **`scheduled_tasks` 表** ✅ 已完成
   - 新增字段 `id` (TEXT, PRIMARY KEY, UUID)。
   - 新增字段 `user_id` (TEXT, NOT NULL, 外键关联 `users` 表)。
   - 新增字段 `article_id` (TEXT, NOT NULL)。
@@ -399,21 +471,23 @@
   - 新增字段 `status` (TEXT, NOT NULL, 默认 'scheduled')。
   - 新增字段 `created_at` (DATETIME, NOT NULL, 默认当前时间)。
   - 新增字段 `updated_at` (DATETIME, NOT NULL, 默认当前时间)。
+  - **实现位置**: [`V1__initial_schema.sql.ts`](src/sql/migrations/V1__initial_schema.sql.ts:1)
 
-### 4.4 错误处理机制
+### 4.4 错误处理机制 ✅ 已完成
 
 - **请求参数验证失败**: `TaskController` 返回 400 Bad Request。
 - **任务不存在**: `TaskService` 抛出 `TaskNotFoundError`，`TaskController` 捕获并返回 404 Not Found。
 - **权限不足**: `TaskService` 抛出 `UnauthorizedError`，`TaskController` 捕获并返回 403 Forbidden。
 - **调度器操作失败**: `TaskService` 抛出 `SchedulerError`，`TaskController` 捕获并返回 500 Internal Server Error。
+- **实现位置**: [`errorHandler.ts`](src/middleware/errorHandler.ts:1)
 
 ---
 
-## 5. `OptimizationStatusPage` (优化状态监控页面)
+## 5. `OptimizationStatusPage` (优化状态监控页面) ✅ 已完成
 
-### 5.1 API 端点设计
+### 5.1 API 端点设计 ✅ 已完成
 
-- **`GET /api/optimizations`**
+- **`GET /api/optimizations`** ✅ 已完成
   - **HTTP 方法**: `GET`
   - **路径**: `/api/optimizations`
   - **请求参数**: `userId` (可选), `articleId` (可选), `status` (可选: `pending`, `running`, `completed`, `failed`), `limit`, `offset`
@@ -424,8 +498,9 @@
     ]
     ```
   - **DTO**: `OptimizationRunDto[]`
+  - **实现位置**: [`optimizationController.ts`](src/api/optimizationController.ts:36)
 
-- **`GET /api/optimizations/:id`**
+- **`GET /api/optimizations/:id`** ✅ 已完成
   - **HTTP 方法**: `GET`
   - **路径**: `/api/optimizations/:id`
   - **请求体**: 无
@@ -443,41 +518,49 @@
     }
     ```
   - **DTO**: `OptimizationRunDto`
+  - **实现位置**: [`optimizationController.ts`](src/api/optimizationController.ts:81)
 
-### 5.2 核心业务逻辑概要
+### 5.2 核心业务逻辑概要 ✅ 已完成
 
-- **`OptimizationService` (新增)**:
-  - **`getOptimizationRuns(userId: string, filters: { articleId?: string, status?: string, limit?: number, offset?: number })`**:
+- **`OptimizationService` (新增)** ✅ 已完成
+  - **`getOptimizationRuns(userId: string, filters: { articleId?: string, status?: string, limit?: number, offset?: number })`** ✅ 已完成
     - 从 `seo_runs` 表中查询优化运行记录，支持按 `userId`, `articleId`, `status` 过滤和分页。
     - **JSDoc**: 为方法添加详细 JSDoc。
-  - **`getOptimizationRunById(userId: string, id: string)`**:
+    - **实现位置**: [`OptimizationService.ts`](src/services/OptimizationService.ts:293)
+
+  - **`getOptimizationRunById(userId: string, id: string)`** ✅ 已完成
     - 获取单个优化运行的详细信息，并进行权限检查。
     - **JSDoc**: 为方法添加详细 JSDoc。
-- **`OptimizationController` (新增)**:
+    - **实现位置**: [`OptimizationService.ts`](src/services/OptimizationService.ts:359)
+
+- **`OptimizationController` (新增)** ✅ 已完成
   - 处理所有 `/api/optimizations` 相关的请求，调用 `OptimizationService` 的相应方法。
   - 实现请求参数校验。
   - **JSDoc**: 为控制器及其方法添加详细 JSDoc。
+  - **实现位置**: [`optimizationController.ts`](src/api/optimizationController.ts:1)
 
-### 5.3 数据库架构变更
+### 5.3 数据库架构变更 ✅ 已完成
 
-- **`seo_runs` 表**:
+- **`seo_runs` 表** ✅ 已完成
   - 新增字段 `user_id` (TEXT, NOT NULL, 外键关联 `users` 表)。
   - 新增字段 `llm_model` (TEXT, 可选)。
   - 新增字段 `optimization_params` (TEXT AS JSON, 可选)。
+  - **实现位置**: [`V1__initial_schema.sql.ts`](src/sql/migrations/V1__initial_schema.sql.ts:1)
 
-### 5.4 错误处理机制
+### 5.4 错误处理机制 ✅ 已完成
 
 - **请求参数验证失败**: `OptimizationController` 返回 400 Bad Request。
 - **运行记录不存在**: `OptimizationService` 抛出 `OptimizationRunNotFoundError`，`OptimizationController` 捕获并返回 404 Not Found。
 - **权限不足**: `OptimizationService` 抛出 `UnauthorizedError`，`OptimizationController` 捕获并返回 403 Forbidden。
+- **实现位置**: [`errorHandler.ts`](src/middleware/errorHandler.ts:1)
 
 ---
 
-## 6. `LogViewerPage` (日志查看器页面)
+## 6. `LogViewerPage` (日志查看器页面) ✅ 已完成
 
-### 6.1 API 端点设计
+### 6.1 API 端点设计 ✅ 已完成
 
-- **`GET /api/logs`**
+- **`GET /api/logs`** ✅ 已完成
   - **HTTP 方法**: `GET`
   - **路径**: `/api/logs`
   - **请求参数**: `level` (可选: `info`, `warn`, `error`), `module` (可选: `ModuleKey` 枚举值), `limit`, `offset`
@@ -499,38 +582,44 @@
     ]
     ```
   - **DTO**: `LogEntryDto[]`
+  - **实现位置**: [`logController.ts`](src/api/logController.ts:42)
 
-### 6.2 核心业务逻辑概要
+### 6.2 核心业务逻辑概要 ✅ 已完成
 
-- **`LogService` (新增)**:
-  - **`getLogs(filters: { level?: string, module?: string, limit?: number, offset?: number })`**:
+- **`LogService` (新增)** ✅ 已完成
+  - **`getLogs(filters: { level?: string, module?: string, limit?: number, offset?: number })`** ✅ 已完成
     1.  读取日志文件（日志文件路径从 `ConfigService` 获取）。
     2.  解析日志内容（例如，按行读取，解析 JSON 或特定格式）。
     3.  根据 `level` 和 `module` 进行过滤。
     4.  支持分页 (`limit`, `offset`)。
     - **JSDoc**: 为方法添加详细 JSDoc。
-- **`LogController` (新增)**:
+    - **实现位置**: [`LogService.ts`](src/services/LogService.ts:112)
+
+- **`LogController` (新增)** ✅ 已完成
   - 处理 `/api/logs` 请求，调用 `LogService.getLogs`。
   - 实现请求参数校验。
   - **JSDoc**: 为控制器及其方法添加详细 JSDoc。
+  - **实现位置**: [`logController.ts`](src/api/logController.ts:1)
 
-### 6.3 数据库架构变更
+### 6.3 数据库架构变更 ✅ 已完成
 
 - 无直接数据库变更，但日志文件路径可能需要作为系统配置存储在 `settings` 表中。
+- **实现位置**: [`V1__initial_schema.sql.ts`](src/sql/migrations/V1__initial_schema.sql.ts:1)
 
-### 6.4 错误处理机制
+### 6.4 错误处理机制 ✅ 已完成
 
 - **请求参数验证失败**: `LogController` 返回 400 Bad Request。
 - **日志文件不存在或无法读取**: `LogService` 抛出 `LogFileError`，`LogController` 捕获并返回 500 Internal Server Error。
 - **权限不足**: `LogController` 捕获并返回 403 Forbidden。
+- **实现位置**: [`errorHandler.ts`](src/middleware/errorHandler.ts:1)
 
 ---
 
-## 7. `SettingsPage` (系统设置页面)
+## 7. `SettingsPage` (系统设置页面) ✅ 已完成
 
-### 7.1 API 端点设计
+### 7.1 API 端点设计 ✅ 已完成
 
-- **`GET /api/settings`**
+- **`GET /api/settings`** ✅ 已完成
   - **HTTP 方法**: `GET`
   - **路径**: `/api/settings`
   - **请求体**: 无
@@ -563,8 +652,9 @@
     ```
     _注意: 敏感信息（如 `apiKey`, `pass`）在响应中应被脱敏或不返回。_
   - **DTO**: `SettingsDto`
+  - **实现位置**: [`configController.ts`](src/api/configController.ts:155)
 
-- **`PUT /api/settings`**
+- **`PUT /api/settings`** ✅ 已完成
   - **HTTP 方法**: `PUT`
   - **路径**: `/api/settings`
   - **请求体示例**:
@@ -593,8 +683,9 @@
     }
     ```
   - **DTO**: `UpdateSettingsRequestDto` (请求), `MessageResponseDto` (响应)
+  - **实现位置**: [`configController.ts`](src/api/configController.ts:210)
 
-- **`GET /api/settings/:key`**
+- **`GET /api/settings/:key`** ⚠️ 部分完成
   - **HTTP 方法**: `GET`
   - **路径**: `/api/settings/:key` (例如 `/api/settings/llmConfig`)
   - **请求体**: 无
@@ -607,8 +698,9 @@
     }
     ```
   - **DTO**: `any` (根据 `:key` 动态)
+  - **实现位置**: 需要实现
 
-- **`PUT /api/settings/:key`**
+- **`PUT /api/settings/:key`** ⚠️ 部分完成
   - **HTTP 方法**: `PUT`
   - **路径**: `/api/settings/:key`
   - **请求体示例**:
@@ -624,51 +716,64 @@
     }
     ```
   - **DTO**: `any` (请求), `MessageResponseDto` (响应)
+  - **实现位置**: 需要实现
 
-### 7.2 核心业务逻辑概要
+### 7.2 核心业务逻辑概要 ✅ 已完成
 
-- **`ConfigService` (已在 `InitializationPage` 中提及，这里是其更全面的应用)**:
-  - **`getAllSettings(userId: string)`**:
+- **`ConfigService` (已在 `InitializationPage` 中提及，这里是其更全面的应用)** ✅ 已完成
+  - **`getAllSettings(userId: string)`** ✅ 已完成
     - 从 `settings` 表中获取所有配置。
     - 对敏感信息（如 API Key、SMTP 密码）进行脱敏处理。
     - **JSDoc**: 为方法添加详细 JSDoc。
-  - **`updateSettings(userId: string, settingsData: UpdateSettingsRequestDto)`**:
+    - **实现位置**: [`ConfigService.ts`](src/services/ConfigService.ts:30)
+
+  - **`updateSettings(userId: string, settingsData: UpdateSettingsRequestDto)`** ✅ 已完成
     - 验证用户权限和 `settingsData`。
     - 验证并更新 `settings` 表中的所有配置。
     - 如果 `smtpConfig` 提供且有效，更新 `is_smtp_configured` 状态。
     - 如果 `llmConfig.apiKey` 发生变化，可能需要更新 `ApiKeyService` 中的相应记录。
     - **JSDoc**: 为方法添加详细 JSDoc。
-  - **`getSettingByKey(userId: string, key: string)`**:
+    - **实现位置**: [`ConfigService.ts`](src/services/ConfigService.ts:194)
+
+  - **`getSettingByKey(userId: string, key: string)`** ⚠️ 部分完成
     - 获取特定设置，并进行权限检查。
     - 对敏感信息进行脱敏处理。
     - **JSDoc**: 为方法添加详细 JSDoc。
-  - **`updateSettingByKey(userId: string, key: string, value: any)`**:
+    - **实现位置**: 需要实现
+
+  - **`updateSettingByKey(userId: string, key: string, value: any)`** ⚠️ 部分完成
     - 验证用户权限和 `value`。
     - 更新 `settings` 表中指定 Key 的设置。
     - 如果更新的是 `smtpConfig`，则更新 `is_smtp_configured` 状态。
     - **JSDoc**: 为方法添加详细 JSDoc。
-- **`ConfigController` (已在 `InitializationPage` 中提及，这里是其更全面的应用)**:
+    - **实现位置**: 需要实现
+
+- **`ConfigController` (已在 `InitializationPage` 中提及，这里是其更全面的应用)** ✅ 已完成
   - 处理所有 `/api/settings` 相关的请求，调用 `ConfigService` 的相应方法。
   - 实现请求参数校验。
   - **JSDoc**: 为控制器及其方法添加详细 JSDoc。
+  - **实现位置**: [`configController.ts`](src/api/configController.ts:1)
 
-### 7.3 数据库架构变更
+### 7.3 数据库架构变更 ✅ 已完成
 
-- **`settings` 表**:
+- **`settings` 表** ✅ 已完成
   - 确保 `value` 字段能够灵活存储各种类型的配置数据（例如，使用 JSON 字段）。
   - 新增字段 `log_file_path` (TEXT, 可选)。
+  - **实现位置**: [`V1__initial_schema.sql.ts`](src/sql/migrations/V1__initial_schema.sql.ts:1)
 
-### 7.4 错误处理机制
+### 7.4 错误处理机制 ✅ 已完成
 
 - **请求参数验证失败**: `ConfigController` 返回 400 Bad Request。
 - **设置项不存在**: `ConfigService` 抛出 `SettingNotFoundError`，`ConfigController` 捕获并返回 404 Not Found。
 - **权限不足**: `ConfigService` 抛出 `UnauthorizedError`，`ConfigController` 捕获并返回 403 Forbidden。
+- **实现位置**: [`errorHandler.ts`](src/middleware/errorHandler.ts:1)
 
 ---
 
-## 8. 跨模块依赖与初始化
+## 8. 跨模块依赖与初始化 ✅ 已完成
 
-- **`src/logger.ts`**: `Modules` 枚举需要添加新的控制器和服务模块。
+- **`src/logger.ts`**: `Modules` 枚举需要添加新的控制器和服务模块。 ✅ 已完成
+
   ```typescript
   export enum Modules {
     // ... existing modules
@@ -684,31 +789,61 @@
     LogController = 'LogController',
   }
   ```
-- **`src/index.ts` (主入口文件)**:
+
+  - **实现位置**: [`logger.ts`](src/logger.ts:1)
+
+- **`src/index.ts` (主入口文件)**: ✅ 已完成
   1.  **导入新的服务和控制器**。
   2.  **实例化新的服务**，并将 `DatabaseManager` 等依赖注入。
   3.  **实例化新的控制器**，并将相应的服务注入。
   4.  **将新的控制器路由注册到 Express 应用程序中**。
-- **DTO 文件**: 创建新的 DTO 文件（例如 `src/types/config.ts`, `src/types/apiKey.ts`, `src/types/task.ts`, `src/types/optimization.ts`, `src/types/log.ts`）来定义上述 API 端点的请求和响应体结构。
+  - **实现位置**: [`index.ts`](src/index.ts:1)
+
+- **DTO 文件**: 创建新的 DTO 文件（例如 `src/types/config.ts`, `src/types/apiKey.ts`, `src/types/task.ts`, `src/types/optimization.ts`, `src/types/log.ts`）来定义上述 API 端点的请求和响应体结构。 ✅ 已完成
+  - **实现位置**: [`types`](src/types/) 目录
 
 ---
 
-## 9. 整体错误处理
+## 9. 整体错误处理 ✅ 已完成
 
-- **全局错误处理中间件**: 在 Express 应用程序中实现一个全局错误处理中间件，捕获所有未处理的错误，并根据错误类型返回适当的 HTTP 状态码和错误信息。
-- **自定义错误类**: 定义一系列自定义错误类（例如 `RegistrationDisabledError`, `SystemAlreadyInitializedError`, `ApiKeyNotFoundError`, `TaskNotFoundError`, `OptimizationRunNotFoundError`, `LogFileError`, `SettingNotFoundError`, `UnauthorizedError` 等），以便在业务逻辑层抛出特定错误，并在控制器层进行统一处理。
+- **全局错误处理中间件**: 在 Express 应用程序中实现一个全局错误处理中间件，捕获所有未处理的错误，并根据错误类型返回适当的 HTTP 状态码和错误信息。 ✅ 已完成
+  - **实现位置**: [`errorHandler.ts`](src/middleware/errorHandler.ts:1)
+
+- **自定义错误类**: 定义一系列自定义错误类（例如 `RegistrationDisabledError`, `SystemAlreadyInitializedError`, `ApiKeyNotFoundError`, `TaskNotFoundError`, `OptimizationRunNotFoundError`, `LogFileError`, `SettingNotFoundError`, `UnauthorizedError` 等），以便在业务逻辑层抛出特定错误，并在控制器层进行统一处理。 ✅ 已完成
+  - **实现位置**: [`customErrors.ts`](src/errors/customErrors.ts:1)
 
 ---
 
-我已将详细的后端功能补全与完善计划写入 `docs/PLAN.zh.md` 文件。
+## 10. 待完成任务
 
-现在，我将更新待办事项列表，将“制定详细的后端功能补全与完善计划”标记为完成。
+### 10.1 任务手动触发功能
+
+- **`POST /api/tasks/:id/run`** 端点实现
+  - 在 [`TaskController`](src/api/taskController.ts:1) 中添加手动触发任务的端点
+  - 在 [`TaskService`](src/services/TaskService.ts:1) 中实现 `triggerTask` 方法
+  - 与 `Scheduler` 模块交互，手动触发任务运行
+
+### 10.2 设置页面部分功能
+
+- **`GET /api/settings/:key`** 端点实现
+  - 在 [`ConfigController`](src/api/configController.ts:1) 中添加获取单个设置的端点
+  - 在 [`ConfigService`](src/services/ConfigService.ts:1) 中实现 `getSettingByKey` 方法
+
+- **`PUT /api/settings/:key`** 端点实现
+  - 在 [`ConfigController`](src/api/configController.ts:1) 中添加更新单个设置的端点
+  - 在 [`ConfigService`](src/services/ConfigService.ts:1) 中实现 `updateSettingByKey` 方法
+
+---
+
+我已将详细的后端功能补全与完善计划写入 `docs/PLAN.zh.md` 文件，并更新了已完成任务的状态。
+
+现在，我将更新待办事项列表，将"制定详细的后端功能补全与完善计划"标记为完成。
 
 <update_todo_list>
 <todos>
 [x] 了解现有代码中关于Halo API端点和文章更新逻辑的实现。
 [x] 评估现有代码以确定需要修改哪些文件来支持新的 `/apis/content.halo.run/v1alpha1/posts` PATCH JSON-patch 端点。
-[x] 基于用户提供的“World”、“Requirements”和“Specifications”重新设计项目架构。
+[x] 基于用户提供的"World"、"Requirements"和"Specifications"重新设计项目架构。
 [x] 绘制Mermaid图，清晰地展示新的系统架构和关键模块间的交互。
 [x] 制定详细的实现计划，包括前端Web UI、后端API、持久化存储、账户系统（MelodyAuth）和部署方案。
 [x] 定义API层、服务层和基础设施层的具体职责和接口。
@@ -732,7 +867,8 @@
 [x] 创建 `SettingsPage`。
 [x] 编写 pkg 打包脚本以及 Dockerfile 和 docker-compose.yml 文件用于部署。
 [x] 征求用户对新架构和计划的批准。
-[x] 切换到合适的模式（例如“Code”模式）开始实施。
+[x] 切换到合适的模式（例如"Code"模式）开始实施。
 [x] 制定详细的后端功能补全与完善计划。
+[x] 更新项目计划文档，记录已完成的功能和当前进展。
 </todos>
 </update_todo_list>

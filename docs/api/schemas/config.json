@@ -1,0 +1,208 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Config Schema Collection",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "SystemStatus": {
+        "type": "object",
+        "description": "系统状态接口，用于表示系统的初始化和配置状态",
+        "required": ["isSystemInitialized", "isSmtpConfigured", "allowNewUserRegistration"],
+        "properties": {
+          "isSystemInitialized": {
+            "type": "boolean",
+            "description": "系统是否已初始化"
+          },
+          "isSmtpConfigured": {
+            "type": "boolean",
+            "description": "SMTP是否已配置"
+          },
+          "allowNewUserRegistration": {
+            "type": "boolean",
+            "description": "控制普通用户注册是否开放"
+          }
+        }
+      },
+      "SmtpConfig": {
+        "type": "object",
+        "description": "SMTP 配置接口",
+        "required": ["host", "port", "username", "password", "fromAddress", "secure"],
+        "properties": {
+          "host": {
+            "type": "string",
+            "description": "SMTP服务器地址"
+          },
+          "port": {
+            "type": "integer",
+            "description": "SMTP服务器端口"
+          },
+          "username": {
+            "type": "string",
+            "description": "SMTP用户名"
+          },
+          "password": {
+            "type": "string",
+            "description": "SMTP密码"
+          },
+          "fromAddress": {
+            "type": "string",
+            "format": "email",
+            "description": "发件人邮箱"
+          },
+          "secure": {
+            "type": "boolean",
+            "description": "true for 465, false for other ports"
+          }
+        }
+      },
+      "LlmConfig": {
+        "type": "object",
+        "description": "LLM (Large Language Model) 配置接口",
+        "required": ["llmModel", "llmApiKey"],
+        "properties": {
+          "llmModel": {
+            "type": "string",
+            "description": "默认模型，例如 'gpt-3.5-turbo'"
+          },
+          "llmApiKey": {
+            "type": "string",
+            "description": "LLM API密钥"
+          },
+          "llmApiBaseUrl": {
+            "type": "string",
+            "description": "OpenAI compatible API 的基础 URL"
+          }
+        }
+      },
+      "OptimizationParams": {
+        "type": "object",
+        "description": "SEO 优化参数接口",
+        "required": ["minContentLength", "maxContentLength", "minDaysSinceLastOptimization", "forceReoptimize"],
+        "properties": {
+          "minContentLength": {
+            "type": "integer",
+            "description": "最小内容长度"
+          },
+          "maxContentLength": {
+            "type": "integer",
+            "description": "最大内容长度"
+          },
+          "minDaysSinceLastOptimization": {
+            "type": "integer",
+            "description": "距离上次优化的最小天数"
+          },
+          "forceReoptimize": {
+            "type": "boolean",
+            "description": "是否强制重新优化"
+          },
+          "metaDescriptionLength": {
+            "type": "integer",
+            "description": "允许 LLM 生成的 metaDescription 长度 (例如：160)"
+          },
+          "keywordsCount": {
+            "type": "integer",
+            "description": "允许 LLM 生成的关键词数量 (例如：3)"
+          }
+        }
+      },
+      "SystemSettings": {
+        "type": "object",
+        "description": "系统设置 DTO 接口，用于在 API 之间传输完整的系统设置",
+        "required": ["isSystemInitialized", "smtpConfig", "llmConfig", "optimizationParams", "databasePath", "logFilePath", "allowNewUserRegistration"],
+        "properties": {
+          "isSystemInitialized": {
+            "type": "boolean",
+            "description": "系统是否已初始化"
+          },
+          "smtpConfig": {
+            "$ref": "#/components/schemas/SmtpConfig"
+          },
+          "llmConfig": {
+            "$ref": "#/components/schemas/LlmConfig"
+          },
+          "optimizationParams": {
+            "$ref": "#/components/schemas/OptimizationParams"
+          },
+          "databasePath": {
+            "type": "string",
+            "description": "数据库文件路径"
+          },
+          "logFilePath": {
+            "type": "string",
+            "description": "日志文件路径"
+          },
+          "allowNewUserRegistration": {
+            "type": "boolean",
+            "description": "是否允许新用户注册"
+          }
+        }
+      },
+      "InitializeSystemRequest": {
+        "type": "object",
+        "description": "初始化系统请求 DTO 接口",
+        "required": ["adminUsername", "adminPassword"],
+        "properties": {
+          "adminUsername": {
+            "type": "string",
+            "description": "管理员用户名"
+          },
+          "adminPassword": {
+            "type": "string",
+            "description": "管理员密码"
+          },
+          "smtpConfig": {
+            "$ref": "#/components/schemas/SmtpConfig"
+          },
+          "llmConfig": {
+            "$ref": "#/components/schemas/LlmConfig"
+          },
+          "optimizationParams": {
+            "$ref": "#/components/schemas/OptimizationParams"
+          },
+          "databasePath": {
+            "type": "string",
+            "description": "数据库文件路径"
+          },
+          "logFilePath": {
+            "type": "string",
+            "description": "日志文件路径"
+          },
+          "allowNewUserRegistration": {
+            "type": "boolean",
+            "description": "是否允许新用户注册"
+          }
+        }
+      },
+      "UpdateSystemSettingsRequest": {
+        "type": "object",
+        "description": "更新系统设置请求 DTO 接口",
+        "properties": {
+          "smtpConfig": {
+            "$ref": "#/components/schemas/SmtpConfig"
+          },
+          "llmConfig": {
+            "$ref": "#/components/schemas/LlmConfig"
+          },
+          "optimizationParams": {
+            "$ref": "#/components/schemas/OptimizationParams"
+          },
+          "databasePath": {
+            "type": "string",
+            "description": "数据库文件路径"
+          },
+          "logFilePath": {
+            "type": "string",
+            "description": "日志文件路径"
+          },
+          "allowNewUserRegistration": {
+            "type": "boolean",
+            "description": "是否允许新用户注册"
+          }
+        }
+      }
+    }
+  }
+}
